@@ -1,0 +1,119 @@
+name: AnoDDPM
+target_size: &target_size !!python/tuple [128, 128]
+train_batch_size: &tbatch_size 16
+downstream_batch_size: &dbatch_size 16
+checkpoint_path: &checkpoint_path './projects/anoddpm/weights/runs/'
+#
+# Experiment
+#
+experiment:
+  name: DDPM
+  task: train
+  weights: # ./projects/anoddpm/weights/pretrained/Pretrainer_3000ep_128x/best_model.pt
+
+device: gpu
+configurator:
+  module_name: core.Configurator
+  class_name: DLConfigurator
+  params:
+#
+# Model
+#
+model:
+  module_name: model_zoo.ddpm
+  class_name: DDPM
+  params:
+    spatial_dims: 2
+    in_channels: 1
+    out_channels: 1
+    num_channels: 
+      - 128
+      - 256
+      - 256
+    attention_levels:
+      - False
+      - True
+      - True
+    num_res_blocks: 1
+    num_head_channels: 256
+
+    # Scheduling and noising scheme
+    train_scheduler: "ddpm"
+    inference_scheduler: "ddpm"
+    inference_steps: 1000
+    noise_level_recon: 200
+    noise_type: "gaussian"
+    prediction_type: "epsilon"
+
+    # Thresholds on stroke data: 71, 570
+    threshold_low: 1
+    threshold_high: 10000
+
+    image_path: './projects/anoddpm/images/'
+
+
+#
+# Trainer
+#
+trainer:
+  module_name: projects.anoddpm.Trainer
+  class_name: PTrainer
+  params:
+    input_size: *target_size
+    checkpoint_path: *checkpoint_path
+    batch_size: *tbatch_size
+    nr_epochs: 999
+    val_interval: 50
+    # Loss
+    loss:
+      module_name: optim.losses.ln_losses
+      class_name: L2
+      params:
+    optimizer_params:
+      lr: 1.0e-4
+  # Data Loader
+  data_loader:
+    # IXI-T1
+    module_name: core.DataLoader
+    class_name: DefaultDataLoader
+    params:
+      args:
+        target_size: *target_size
+        batch_size: *tbatch_size
+        dataset_module:
+          module_name: data.loaders.ixi_loader
+          class_name: IXILoader
+        data_dir:
+          train:
+            - './data/CAPS_IXI/splits/ixi_normal_train.csv'
+          val:
+            - './data/fastMRI/normal_test.csv'
+          test:
+            - './data/ATLAS/splits/atlas_train_png.csv'
+
+# Downstream tasks
+downstream_tasks:  
+  detection:
+   module_name: projects.anoddpm.DownstreamEvaluator
+   class_name: PDownstreamEvaluator
+   checkpoint_path: *checkpoint_path
+   global_detection: True
+   data_loader:
+     module_name: core.DataLoader
+     class_name: DefaultDataLoader
+     params:
+       args:
+         target_size: *target_size
+         batch_size: *dbatch_size
+         dataset_module:
+           module_name: data.loaders.ixi_loader
+           class_name: IXILoader
+     datasets:
+       Atlas:
+         data_dir:
+           test:
+             - './data/ATLAS/splits/atlas_train_png.csv'
+         label_dir:
+           test:
+             - './data/ATLAS/splits/atlas_train_mask_png.csv' 
+
