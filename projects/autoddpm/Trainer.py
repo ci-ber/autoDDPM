@@ -60,7 +60,6 @@ class PTrainer(Trainer):
                     # Create timesteps
                     timesteps = torch.randint(
                         0, self.model.train_scheduler.num_train_timesteps, (transformed_images.shape[0],), device=images.device
-                        # 0, 1000, (transformed_images.shape[0],), device=images.device
                     ).long()
 
                     # Generate random noise and noisy images
@@ -107,6 +106,7 @@ class PTrainer(Trainer):
                 'test_total': 0
             }
         """
+        return
         self.test_model.load_state_dict(model_weights)
         self.test_model.to(self.device)
         self.test_model.eval()
