@@ -5,7 +5,9 @@ Published at ICML IMLH 2023:
 - https://openreview.net/pdf?id=kTpafpXrqa
 - https://arxiv.org/abs/2305.19643
 
-Check the project web-page here: https://ci.bercea.net/project/autoddpm/
+Check the project web page here: https://ci.bercea.net/project/autoddpm/
+
+![Uploading method.gif…]()
 
 ## Abstract
 
