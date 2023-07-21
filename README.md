@@ -8,7 +8,7 @@ Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomal
 </h1>
   <p align="center">
     <a href="https://ci.bercea.net">Cosmin Bercea</a> •
-    Michael Neumayr •
+    <a href="https://www.linkedin.com/in/michael-neumayr-21382515b/">Michael Neumayr</a> •
     <a href="https://aim-lab.io/author/daniel-ruckert/">Daniel Rueckert </a> •
     <a href="https://compai-lab.github.io/author/julia-a.-schnabel/">Julia A. Schnabel </a>
   </p>
