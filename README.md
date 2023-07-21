@@ -1,5 +1,10 @@
 # AutoDDPM
-## Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models
+
+<h1 align="center">
+  <br>
+[ICML IMLH 2023] Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models
+  <br>
+</h1>
 </h1>
   <p align="center">
     <a href="https://ci.bercea.net">Cosmin Bercea</a> •
