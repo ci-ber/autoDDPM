@@ -7,7 +7,8 @@ Published at ICML IMLH 2023:
 
 Check the project web page here: https://ci.bercea.net/project/autoddpm/
 
-![Uploading method.gif…]()
+![method](https://github.com/ci-ber/autoDDPM/assets/106509806/54bebddf-d074-4eb9-82f3-3115f8625fc7)
+
 
 ## Abstract
 
