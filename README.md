@@ -12,12 +12,9 @@
     <a href="https://aim-lab.io/author/daniel-ruckert/">Daniel Rueckert </a> •
     <a href="https://compai-lab.github.io/author/julia-a.-schnabel/">Julia A. Schnabel </a>
   </p>
-  
-<h4 align="center"><a href="https://ci.bercea.net/project/autoddpm/">Project Website</a>
-
-Published at ICML IMLH 2023: 
-- https://openreview.net/pdf?id=kTpafpXrqa
-- https://arxiv.org/abs/2305.19643
+<h4 align="center">Official repository of the paper</h4>
+<h4 align="center">ICML IMLH 2023</h4>
+<h4 align="center"><a href="https://ci.bercea.net/project/autoddpm/">Project Website</a> • <h4 align="center"><a href="https://openreview.net/pdf?id=kTpafpXrqa">Paper</a>  • <h4 align="center"><a href="https://arxiv.org/abs/2305.19643">Preprint</a>
 
 ![method](https://github.com/ci-ber/autoDDPM/assets/106509806/54bebddf-d074-4eb9-82f3-3115f8625fc7)
 
@@ -33,13 +30,11 @@ year={2023}
 }
 ```
 
-## Abstract
-
-The introduction of diffusion models in anomaly detection has paved the way for more effective and accurate image reconstruction in pathologies. However, the current limitations in controlling noise granularity hinder diffusion models' ability to generalize across diverse anomaly types and compromise the restoration of healthy tissues. To overcome these challenges, we propose AutoDDPM, a novel approach that enhances the robustness of diffusion models. 
-
-AutoDDPM utilizes diffusion models to generate initial likelihood maps of potential anomalies and seamlessly integrates them with the original image. Through joint noised distribution re-sampling, AutoDDPM achieves harmonization and in-painting effects. Our study demonstrates the efficacy of AutoDDPM in replacing anomalous regions while preserving healthy tissues, considerably surpassing diffusion models' limitations. 
-
-It also contributes valuable insights and analysis on the limitations of current diffusion models, promoting robust and interpretable anomaly detection in medical imaging - an essential aspect of building autonomous clinical decision systems with higher interpretability.
+> **Abstract:** *The introduction of diffusion models in anomaly detection has paved the way for more effective and accurate image reconstruction in pathologies. However, the current limitations in controlling noise granularity hinder diffusion models' ability to generalize across diverse anomaly types and compromise the restoration of healthy tissues. To overcome these challenges, we propose AutoDDPM, a novel approach that enhances the robustness of diffusion models. 
+>
+> AutoDDPM utilizes diffusion models to generate initial likelihood maps of potential anomalies and seamlessly integrates them with the original image. Through joint noised distribution re-sampling, AutoDDPM achieves harmonization and in-painting effects. Our study demonstrates the efficacy of AutoDDPM in replacing anomalous regions while preserving healthy tissues, considerably surpassing diffusion models' limitations. 
+> 
+> It also contributes valuable insights and analysis on the limitations of current diffusion models, promoting robust and interpretable anomaly detection in medical imaging - an essential aspect of building autonomous clinical decision systems with higher interpretability.*
 
 
 ## Setup and Run
