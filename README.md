@@ -9,6 +9,17 @@ Check the project web page here: https://ci.bercea.net/project/autoddpm/
 
 ![method](https://github.com/ci-ber/autoDDPM/assets/106509806/54bebddf-d074-4eb9-82f3-3115f8625fc7)
 
+## Citation
+
+If you find our work useful, please cite our paper:
+```
+@article{bercea2023mask,
+title={Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models},
+author={Bercea, Cosmin I and Neumayr, Michael and Rueckert, Daniel and Schnabel, Julia A},
+journal={arXiv preprint arXiv:2305.19643},
+year={2023}
+}
+```
 
 ## Abstract
 
@@ -56,14 +67,3 @@ Refer to the autoddpm.yaml for the default configuration. Store the pretrained m
 
 By default, reconstructed images (from the first masking part of the pipeline) and inpainted images (after the second stitching and resampling part of the pipeline) are stored so that one can work on the parts of the pipeline in a modular way.
 
-## Citation
-
-If you find our work useful, please cite our paper:
-```
-@article{bercea2023mask,
-title={Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models},
-author={Bercea, Cosmin I and Neumayr, Michael and Rueckert, Daniel and Schnabel, Julia A},
-journal={arXiv preprint arXiv:2305.19643},
-year={2023}
-}
-```
