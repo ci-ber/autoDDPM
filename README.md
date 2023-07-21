@@ -45,6 +45,12 @@ year={2023}
 
 The code is based on the deep learning framework from the Institute of Machine Learning in Biomedical Imaging: https://github.com/compai-lab/iml-dl
 
+### Framework overview 
+
+<p align="center">
+<img src="https://github.com/ci-ber/autoDDPM/assets/106509806/10757667-dc59-4012-8e00-5af806c503f5">
+</p>
+
 #### Set up wandb (https://docs.wandb.ai/quickstart)
 
 Sign up for a free account and login to your wandb account.
