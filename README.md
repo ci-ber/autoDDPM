@@ -2,7 +2,7 @@
 
 <h1 align="center">
   <br>
-[ICML IMLH 2023] Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models
+Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models
   <br>
 </h1>
 </h1>
