@@ -14,7 +14,7 @@
   </p>
 <h4 align="center">Official repository of the paper</h4>
 <h4 align="center">ICML IMLH 2023</h4>
-<h4 align="center"><a href="https://ci.bercea.net/project/autoddpm/">Project Website</a> • <h4 align="center"><a href="https://openreview.net/pdf?id=kTpafpXrqa">Paper</a>  • <h4 align="center"><a href="https://arxiv.org/abs/2305.19643">Preprint</a>
+<h4 align="center"><a href="https://ci.bercea.net/project/autoddpm/">Project Website</a> • <a href="https://openreview.net/pdf?id=kTpafpXrqa">Paper</a>  • <a href="https://arxiv.org/abs/2305.19643">Preprint</a> </h4>
 
 ![method](https://github.com/ci-ber/autoDDPM/assets/106509806/54bebddf-d074-4eb9-82f3-3115f8625fc7)
 
