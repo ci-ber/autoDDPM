@@ -1,4 +1,6 @@
-# AutoDDPM
+<p align="center">
+<img src="https://github.com/ci-ber/autoDDPM/assets/106509806/91715b7d-beb2-4ce1-ab8e-917145c940d5" width=200>
+</p>
 
 <h1 align="center">
   <br>
@@ -16,7 +18,9 @@ Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomal
 <h4 align="center">ICML IMLH 2023</h4>
 <h4 align="center"><a href="https://ci.bercea.net/project/autoddpm/">Project Website</a> • <a href="https://openreview.net/pdf?id=kTpafpXrqa">Paper</a>  • <a href="https://arxiv.org/abs/2305.19643">Preprint</a> </h4>
 
-![method](https://github.com/ci-ber/autoDDPM/assets/106509806/54bebddf-d074-4eb9-82f3-3115f8625fc7)
+<p align="center">
+<img src="https://github.com/ci-ber/autoDDPM/assets/106509806/54bebddf-d074-4eb9-82f3-3115f8625fc7">
+</p>
 
 ## Citation
 
