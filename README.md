@@ -1,7 +1,11 @@
 # AutoDDPM
 ## Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models
 
-Code for https://arxiv.org/abs/2305.19643
+Published at ICML IMLH 2023: 
+- https://openreview.net/pdf?id=kTpafpXrqa
+- https://arxiv.org/abs/2305.19643
+
+Check the project web-page here: https://ci.bercea.net/project/autoddpm/
 
 ## Abstract
 
@@ -13,6 +17,8 @@ It also contributes valuable insights and analysis on the limitations of current
 
 
 ## Setup and Run
+
+The code is based on the deep learning framework from the Institute of Machine Learning in Biomedical Imaging: https://github.com/compai-lab/iml-dl
 
 #### Set up wandb (https://docs.wandb.ai/quickstart)
 
