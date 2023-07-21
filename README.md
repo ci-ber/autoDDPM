@@ -67,11 +67,6 @@ Refer to the autoddpm.yaml for the default configuration. Store the pretrained m
 
 By default, reconstructed images (from the first masking part of the pipeline) and inpainted images (after the second stitching and resampling part of the pipeline) are stored so that one can work on the parts of the pipeline in a modular way.
 
-#### Results 
-
-[noise_paradox.pdf](https://github.com/ci-ber/autoDDPM/files/12122698/noise_paradox.pdf)
-![fig_teaser](https://github.com/ci-ber/autoDDPM/assets/106509806/1244abfc-410f-4604-8924-fa6d34028af6)
-
 
 
 
