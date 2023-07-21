@@ -62,6 +62,9 @@ cd autoDDPM
 pip install -r requirements.txt
 ```
 
+#### Download datasets 
+<h4 align="center"><a href="https://brain-development.org/ixi-dataset/">IXI</a> • <a href="https://fastmri.org">Paper</a>  • <a href="https://fcon_1000.projects.nitrc.org/indi/retro/atlas.html">Atlas (Stroke) </a> </h4>
+>  • *Alternatively you can use your own mid-axial slices of T1w brain scans with our <a href="https://www.dropbox.com/s/ooq7vdp9fp4ufag/latest_model.pt.zip?dl=0"> pre-trained weights</a> or train from scratch on other anatomies and modalities.*
 #### Run the pipeline
 
 Run the main script with the corresponding config like this:
@@ -70,7 +73,7 @@ Run the main script with the corresponding config like this:
 python core/Main.py --config_path ./projects/autoddpm/autoddpm.yaml
 ```
 
-Refer to the autoddpm.yaml for the default configuration. Store the pre-trained model from <a href=" https://www.dropbox.com/s/ooq7vdp9fp4ufag/latest_model.pt.zip?dl=0"> HERE</a> into the specified directory to skip the training part.
+Refer to the autoddpm.yaml for the default configuration. Store the pre-trained model from <a href="https://www.dropbox.com/s/ooq7vdp9fp4ufag/latest_model.pt.zip?dl=0"> HERE</a> into the specified directory to skip the training part.
 
 By default, reconstructed images (from the first masking part of the pipeline) and inpainted images (after the second stitching and resampling part of the pipeline) are stored so that one can work on the parts of the pipeline in a modular way.
 
