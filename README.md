@@ -1,11 +1,18 @@
 # AutoDDPM
 ## Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models
+</h1>
+  <p align="center">
+    <a href="https://ci.bercea.net">Cosmin Bercea</a> •
+    Michael Neumayr •
+    <a href="https://aim-lab.io/author/daniel-ruckert/">Daniel Rueckert </a> •
+    <a href="https://compai-lab.github.io/author/julia-a.-schnabel/">Julia A. Schnabel </a>
+  </p>
+  
+<h4 align="center"><a href="https://ci.bercea.net/project/autoddpm/">Project Website</a>
 
 Published at ICML IMLH 2023: 
 - https://openreview.net/pdf?id=kTpafpXrqa
 - https://arxiv.org/abs/2305.19643
-
-Check the project web page here: https://ci.bercea.net/project/autoddpm/
 
 ![method](https://github.com/ci-ber/autoDDPM/assets/106509806/54bebddf-d074-4eb9-82f3-3115f8625fc7)
 
