@@ -48,7 +48,7 @@ The code is based on the deep learning framework from the Institute of Machine L
 ### Framework overview 
 
 <p align="center">
-<img src="https://github.com/ci-ber/autoDDPM/assets/106509806/10757667-dc59-4012-8e00-5af806c503f5">
+<img src="https://github.com/ci-ber/autoDDPM/assets/106509806/b3fe158e-f28e-4470-bbcc-52aacb5daa82">
 </p>
 
 #### Set up wandb (https://docs.wandb.ai/quickstart)
