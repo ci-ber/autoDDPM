@@ -51,7 +51,7 @@ The code is based on the deep learning framework from the Institute of Machine L
 <img src="https://github.com/ci-ber/autoDDPM/assets/106509806/678c5d6c-efb0-4934-a635-284b06636a78">
 </p>
 
-#### Set up wandb (https://docs.wandb.ai/quickstart)
+#### 1). Set up wandb (https://docs.wandb.ai/quickstart)
 
 Sign up for a free account and login to your wandb account.
 ```bash
@@ -59,27 +59,39 @@ wandb login
 ```
 Paste the API key from https://wandb.ai/authorize when prompted.
 
-#### Clone repository
+#### 2). Clone repository
 
 ```bash
 git clone https://github.com/ci-ber/autoDDPM.git
 cd autoDDPM
 ```
 
-#### Install requirements
+#### 3). Install requirements
 
 ```bash
 pip install -r requirements.txt
 ```
 
-#### Download datasets 
+#### 4). Install PyTorch 
+
+> Example installation: 
+* *with cuda*: 
+```
+pip3 install torch==1.9.1+cu111 torchvision==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+```
+* *w/o cuda*:
+```
+pip3 install torch==1.9.1 torchvision==0.10.1 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+#### 5). Download datasets 
 
 <h4 align="center"><a href="https://brain-development.org/ixi-dataset/">IXI</a> • <a href="https://fastmri.org">FastMRI</a> • <a href="https://github.com/microsoft/fastmri-plus"> Labels for FastMRI</a> • <a href="https://fcon_1000.projects.nitrc.org/indi/retro/atlas.html">Atlas (Stroke) </a> </h4>
 
 > *Alternatively you can use your own mid-axial slices of T1w brain scans with our <a href="https://www.dropbox.com/s/ooq7vdp9fp4ufag/latest_model.pt.zip?dl=0"> pre-trained weights</a> or train from scratch on other anatomies and modalities.*
 
 
-#### Run the pipeline
+#### 6). Run the pipeline
 
 Run the main script with the corresponding config like this:
 
@@ -91,7 +103,7 @@ Refer to the autoddpm.yaml for the default configuration. Store the pre-trained 
 
 By default, reconstructed images (from the first masking part of the pipeline) and inpainted images (after the second stitching and resampling part of the pipeline) are stored so that one can work on the parts of the pipeline in a modular way.
 
-
+# That's it, enjoy! :rocket:
 
 
 
