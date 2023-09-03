@@ -26,6 +26,16 @@ Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomal
 
 If you find our work useful, please cite our paper:
 ```
+@inproceedings{
+bercea2023mask,
+title={Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models},
+author={Cosmin I. Bercea and Michael Neumayr and Daniel Rueckert and Julia A Schnabel},
+booktitle={ICML 3rd Workshop on Interpretable Machine Learning in Healthcare (IMLH) },
+year={2023},
+url={https://openreview.net/forum?id=kTpafpXrqa}
+}
+```
+```
 @article{bercea2023mask,
 title={Mask, Stitch, and Re-Sample: Enhancing Robustness and Generalizability in Anomaly Detection through Automatic Diffusion Models},
 author={Bercea, Cosmin I and Neumayr, Michael and Rueckert, Daniel and Schnabel, Julia A},
