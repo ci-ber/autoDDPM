@@ -291,10 +291,10 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 # 3. Setup for loop
                 timesteps = self.model.inference_scheduler.get_timesteps(self.model.noise_level_inpaint)
                 from tqdm import tqdm
-                try:
-                    progress_bar = tqdm(timesteps)
-                except:
-                    progress_bar = iter(timesteps)
+                # try:
+                #     progress_bar = tqdm(timesteps)
+                # except:
+                progress_bar = iter(timesteps)
                 num_resample_steps = self.model.resample_steps
                 # stitched_images = []
                 
