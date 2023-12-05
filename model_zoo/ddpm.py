@@ -90,7 +90,7 @@ class DDPM(nn.Module):
                 num_train_timesteps=1000, noise_type=noise_type, prediction_type=prediction_type)
 
         self.inference_scheduler.set_timesteps(inference_steps)
-        self.device = 'cuda' if config_file['device'] == 'gpu' else 'cpu'
+        self.device = torch.device('cuda:' + str(0) if torch.cuda.is_available() else 'cpu')
 
         self.l_pips_sq = lpips.LPIPS(pretrained=True, net='squeeze', use_dropout=True, eval_mode=True,
                                      spatial=True, lpips=True).to(self.device)
