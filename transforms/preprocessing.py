@@ -87,7 +87,14 @@ class To01:
         """
         Apply the transform to `img`.
         """
-        return img/self.max_val
+        if torch.max(img) <= 1.0:
+            # print(img.cpu().numpy().shape)
+            return img
+        # print(img.cpu().numpy().shape)
+        if torch.max(img) <= 255.0:
+            return img/255
+
+        return img / 65536
 
 
 
