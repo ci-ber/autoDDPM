@@ -229,41 +229,26 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 masks = data[1].to(self.device)
                 masks[masks>0] = 1
 
-                # x_rec = torch.zeros_like(x)
-                # if not os.path.exists(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')):
-                #         os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}'), exist_ok=True)
-                #         os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}'), exist_ok=True)
-                x_rec, _ = self.model.sample_from_image(x, noise_level=self.model.noise_level_recon)
+                x_rec, _ = self.model.sample_from_image(x, noise_level=self.model.noise_level_recon, verbose=False)
                 x_rec = torch.clamp(x_rec, 0, 1)
-                # for i in range(x.shape[0]):
-                #     path_to_rec = os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')
-                #     path_to_image = os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}', f'image_{global_counter}.png')
-                #     global_counter += 1
-                #     if os.path.exists(path_to_rec):
-                #         load reconstructed images
-                        # noised = Image.open(path_to_rec).convert('L')
-                        # x_rec[i] = transforms.ToTensor()(noised)
-                        # load original images
-                        # orig = Image.open(path_to_image).convert('L')
-                        # x[i] = transforms.ToTensor()(orig)
-                    # else:
-                    #     save_image(x_rec[i], path_to_rec)
-                    #     save_image(x[i], path_to_image)
-                    #     print("Saved image at path:", path_to_rec)
                 #
-                # x_res = self.compute_residual(x, x_rec, hist_eq=False)
-                # lpips_mask = self.lpips_loss(x, x_rec, retPerLayer=False)
+                x_res = self.compute_residual(x, x_rec, hist_eq=False)
+                lpips_mask = self.lpips_loss(x, x_rec, retPerLayer=False)
                 #
                 # anomalous: high value, healthy: low value
-                # x_res = np.asarray([ (x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0]) ]).clip(0, 1)
-                # combined_mask_np = lpips_mask * x_res
-                # combined_mask = torch.Tensor(combined_mask_np).to(self.device)
-                # combined_mask_binary = torch.where(combined_mask > th, torch.ones_like(combined_mask), torch.zeros_like(combined_mask))
-                # combined_mask_binary_dilated = self.dilate_masks(combined_mask_binary)
-                # mask_in_use = combined_mask_binary_dilated
+                x_res = np.asarray([ (x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0]) ]).clip(0, 1)
+                combined_mask_np = lpips_mask * x_res
+                combined_mask = torch.Tensor(combined_mask_np).to(self.device)
+                combined_mask_binary = torch.where(combined_mask > th, torch.ones_like(combined_mask), torch.zeros_like(combined_mask))
+                combined_mask_binary_dilated = self.dilate_masks(combined_mask_binary)
+                mask_in_use = combined_mask_binary_dilated
                 #
                 to_visualize = [
-                    {'title': f'l1/95th perc {x.max():.3f}', 'tensor': x, 'cmap': 'plasma'}]
+                    {'title': 'x_coarse', 'tensor': x, 'cmap': 'gray', 'vmax': 1},
+                    {'title': 'x_rec_coarse', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1},
+                    {'title': f'x_res_coarse {x.max():.3f}', 'tensor': combined_mask, 'cmap': 'plasma', 'vmax':.3},
+                    {'title': 'Bin mask', 'tensor': mask_in_use, 'cmap': 'gray', 'vmax': 1}]
+
                     # {'title': f'l1/95th perc {x_res.max():.3f}', 'tensor': x_res, 'cmap': 'plasma'}
                 #     {'title': f'lpips {lpips_mask.max():.3f}', 'tensor': lpips_mask, 'cmap': 'plasma', 'vmax': .4},
                 #     {'title': f'combined {combined_mask.max():.3f}', 'tensor': combined_mask, 'cmap': 'plasma', 'vmax': .3},
