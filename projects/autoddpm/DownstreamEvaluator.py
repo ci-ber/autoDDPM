@@ -343,11 +343,11 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                                         )
 
                     # store inpainted images
-                    for i in range(x.shape[0]):
-                        count = str(idx * len(x) + i)
-                        path_to_inpainted = os.path.join(self.model.image_path, f'image_{count}.png')
-                        save_image(inpaint_image[i][0], path_to_inpainted)
-                        print(f'Saved inpainted image to {path_to_inpainted}')
+                    # for i in range(x.shape[0]):
+                    #     count = str(idx * len(x) + i)
+                    #     path_to_inpainted = os.path.join(self.model.image_path, f'image_{count}.png')
+                        # save_image(inpaint_image[i][0], path_to_inpainted)
+                        # print(f'Saved inpainted image to {path_to_inpainted}')
                     final_inpainted_image = inpaint_image
                 
                 print("95th percentile: ", sum(threshold_masks) / len(threshold_masks))
