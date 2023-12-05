@@ -4,7 +4,7 @@ from monai.transforms import Transform
 from monai.utils.enums import TransformBackends
 from monai.config.type_definitions import NdarrayOrTensor
 import torchvision
-from torchvision.io.image import read_image
+import torchvision.transforms.functional as transform
 import torch.nn.functional as F
 import PIL
 
