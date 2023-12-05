@@ -10,7 +10,7 @@ checkpoint_path: &checkpoint_path ./projects/autoddpm/weights/runs/
 experiment:
   name: DDPM
   task: test
-  weights: ./projects/autoddpm/weights/pretrained/Pretrainer_3000ep_128x/best_model.pt
+  weights: ./weights/pretrained/Pretrainer_3000ep_128x/best_model.pt
 
 device: gpu
 configurator:
