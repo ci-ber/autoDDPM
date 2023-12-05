@@ -249,110 +249,94 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                     {'title': f'x_res_coarse {x.max():.3f}', 'tensor': combined_mask, 'cmap': 'plasma', 'vmax':.3},
                     {'title': 'Bin mask', 'tensor': mask_in_use, 'cmap': 'gray', 'vmax': 1}]
 
-                    # {'title': f'l1/95th perc {x_res.max():.3f}', 'tensor': x_res, 'cmap': 'plasma'}
-                #     {'title': f'lpips {lpips_mask.max():.3f}', 'tensor': lpips_mask, 'cmap': 'plasma', 'vmax': .4},
-                #     {'title': f'combined {combined_mask.max():.3f}', 'tensor': combined_mask, 'cmap': 'plasma', 'vmax': .3},
-                #     {'title': f'combined_binary', 'tensor': combined_mask_binary,},
-                #     {'title': f'comb_bin_dilated', 'tensor': combined_mask_binary_dilated,},
                 # ]
-                # threshold_masks.append(np.percentile(combined_mask.cpu().detach().numpy(), 95).mean()) # approximator for good threshold
+                threshold_masks.append(np.percentile(combined_mask.cpu().detach().numpy(), 95).mean()) # approximator for good threshold
                 #
                 #
-                ## Inpainting setup (inspired by RePaint)
+                # Inpainting setup
                 # 1. Mask the original image (get rid of anomalies) and the reconstructed image (keep reconstructed spots of original anomalies to start inpainting from)
-                # x_masked = (1 - mask_in_use) * x
-                # x_rec_masked = mask_in_use * x_rec
+                x_masked = (1 - mask_in_use) * x
+                x_rec_masked = mask_in_use * x_rec
                 #
                 # to_visualize.append({'title': f'x_masked', 'tensor': x_masked,})
                 # to_visualize.append({'title': f'x_rec_masked', 'tensor': x_rec_masked,})
-                # to_visualize.append({'title': f'just stitched', 'tensor': x_masked + x_rec_masked,})
+                to_visualize.append({'title': f'Stitched', 'tensor': x_masked + x_rec_masked,})
                 #
                 # 2. Start inpainting with reconstructed image and not pure noise
-                # noise = torch.randn_like(x_rec, device=self.device)
-                # timesteps = torch.full([x.shape[0]], self.model.noise_level_inpaint, device=self.device).long()
-                # inpaint_image = self.model.inference_scheduler.add_noise(
-                #     original_samples=x_rec, noise=noise, timesteps=timesteps
-                # )
+                noise = torch.randn_like(x_rec, device=self.device)
+                timesteps = torch.full([x.shape[0]], self.model.noise_level_inpaint, device=self.device).long()
+                inpaint_image = self.model.inference_scheduler.add_noise(
+                    original_samples=x_rec, noise=noise, timesteps=timesteps
+                )
 
                 # 3. Setup for loop
-                # timesteps = self.model.inference_scheduler.get_timesteps(self.model.noise_level_inpaint)
+                timesteps = self.model.inference_scheduler.get_timesteps(self.model.noise_level_inpaint)
                 # from tqdm import tqdm
                 # try:
                 #     progress_bar = tqdm(timesteps)
                 # except:
-                # progress_bar = iter(timesteps)
-                # num_resample_steps = self.model.resample_steps
-                # stitched_images = []
+                progress_bar = iter(timesteps)
+                num_resample_steps = self.model.resample_steps
+                stitched_images = []
 
                 # 4. Inpainting loop
-                # os.makedirs(self.model.image_path, exist_ok=True)
-                # if os.path.exists(os.path.join(self.model.image_path, f'image_{idx * len(x)}.png')):
-                #     x_rec_inpainted = torch.zeros_like(x)
-                #     for i in range(x.shape[0]):
-                #         count = str(idx * len(x) + i)
-                #         path_to_rec = os.path.join(self.model.image_path, f'image_{count}.png')
-                #         inpainted = Image.open(path_to_rec).convert('L')
-                #         x_rec_inpainted[i] = transforms.ToTensor()(inpainted).to('cuda')
-                #     final_inpainted_image = x_rec_inpainted
-                # else:
-                #     with torch.no_grad():
-                #         with autocast(enabled=True):
-                #             for t in progress_bar:
-                #                 for u in range(num_resample_steps):
-                                    # 4a) Get the known portion at t-1
-                                    # if t > 0:
-                                    #     noise = torch.randn_like(x, device=self.device)
-                                    #     timesteps_prev = torch.full([x.shape[0]], t - 1, device=self.device).long()
-                                    #     noised_masked_original_context = self.model.inference_scheduler.add_noise(
-                                    #         original_samples=x_masked, noise=noise, timesteps=timesteps_prev
-                                    #     )
-                                    # else:
-                                    #     noised_masked_original_context = x_masked
-                                    #
-                                    # 4b) Perform a denoising step to get the unknown portion at t-1
-                                    # if t > 0:
-                                    #     timesteps = torch.full([x.shape[0]], t, device=self.device).long()
-                                    #     model_output = self.model.unet(x=inpaint_image, timesteps=timesteps)
-                                    #     inpainted_from_x_rec, _ = self.model.inference_scheduler.step(model_output, t, inpaint_image)
-                                    #
-                                    # 4c) Combine the known and unknown portions at t-1
-                                    # inpaint_image = torch.where(
-                                    #     mask_in_use == 1, inpainted_from_x_rec, noised_masked_original_context
-                                    # )
-                                    ## torch.cat([noised_masked_original_context, inpainted_from_x_rec,
-                # val_image_inpainted], dim=2)
-                                    ## stitched_images.append(inpaint_image)
+                with torch.no_grad():
+                    with autocast(enabled=True):
+                        for t in progress_bar:
+                            for u in range(num_resample_steps):
+                                # 4a) Get the known portion at t-1
+                                if t > 0:
+                                    noise = torch.randn_like(x, device=self.device)
+                                    timesteps_prev = torch.full([x.shape[0]], t - 1, device=self.device).long()
+                                    noised_masked_original_context = self.model.inference_scheduler.add_noise(
+                                        original_samples=x_masked, noise=noise, timesteps=timesteps_prev
+                                    )
+                                else:
+                                    noised_masked_original_context = x_masked
+                                #
+                                # 4b) Perform a denoising step to get the unknown portion at t-1
+                                if t > 0:
+                                    timesteps = torch.full([x.shape[0]], t, device=self.device).long()
+                                    model_output = self.model.unet(x=inpaint_image, timesteps=timesteps)
+                                    inpainted_from_x_rec, _ = self.model.inference_scheduler.step(model_output, t, inpaint_image)
+                                #
+                                # 4c) Combine the known and unknown portions at t-1
+                                inpaint_image = torch.where(
+                                    mask_in_use == 1, inpainted_from_x_rec, noised_masked_original_context
+                                )
+                                # torch.cat([noised_masked_original_context, inpainted_from_x_rec,
+            # val_image_inpainted], dim=2)
+                                ## stitched_images.append(inpaint_image)
 
-                                    ## 4d) Perform resampling: sample x_t from x_t-1 -> get new image to be inpainted
-                # in the masked region
-                #                     if t > 0 and u < (num_resample_steps - 1):
-                #                         inpaint_image = (
-                #                             torch.sqrt(1 - self.model.inference_scheduler.betas[t - 1]) * inpaint_image
-                #                             + torch.sqrt(self.model.inference_scheduler.betas[t - 1]) * torch.randn_like(x, device=self.device)
-                #                         )
-                #
+                                ## 4d) Perform resampling: sample x_t from x_t-1 -> get new image to be inpainted
+            # in the masked region
+                                if t > 0 and u < (num_resample_steps - 1):
+                                    inpaint_image = (
+                                        torch.sqrt(1 - self.model.inference_scheduler.betas[t - 1]) * inpaint_image
+                                        + torch.sqrt(self.model.inference_scheduler.betas[t - 1]) * torch.randn_like(x, device=self.device)
+                                    )
+            #
                 ##     store inpainted images
                 #    # for i in range(x.shape[0]):
                 #    #     count = str(idx * len(x) + i)
                 #    #     path_to_inpainted = os.path.join(self.model.image_path, f'image_{count}.png')
                 #        # save_image(inpaint_image[i][0], path_to_inpainted)
                 #        # print(f'Saved inpainted image to {path_to_inpainted}')
-                #    final_inpainted_image = inpaint_image
 
-                # print("95th percentile: ", sum(threshold_masks) / len(threshold_masks))
+                final_inpainted_image = inpaint_image
+
+                print("95th percentile: ", sum(threshold_masks) / len(threshold_masks))
 
                 # 5. Compute new residual and anomaly maps
-                # x_res_2 = self.compute_residual(x, final_inpainted_image.clamp(0, 1), hist_eq=False)
-                # x_lpips_2 = self.lpips_loss(x, final_inpainted_image, retPerLayer=False)
+                x_res_2 = self.compute_residual(x, final_inpainted_image.clamp(0, 1), hist_eq=False)
+                x_lpips_2 = self.lpips_loss(x, final_inpainted_image, retPerLayer=False)
 
-                # to_visualize.append({'title': 'final inpainted image', 'tensor': final_inpainted_image})
+                to_visualize.append({'title': 'final inpainted image', 'tensor': final_inpainted_image})
                 # to_visualize.append({'title': f'l1 w/ inp. (now eval) {x_res_2.max():.3f}', 'tensor': x_res_2, 'cmap': 'plasma', 'vmax': .9})
                 # to_visualize.append({'title': f'lpips w/ inpainted {x_lpips_2.max():.3f}', 'tensor': x_lpips_2, 'cmap': 'plasma', 'vmax': .4})
                 # to_visualize.append({'title': f'comb. w/ inpainted {(x_lpips_2*x_res_2).max():.3f}', 'tensor': x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .2})
-                # to_visualize.append({'title': f'comb before*after {(combined_mask_np*x_lpips_2*x_res_2).max():.3f}', 'tensor': combined_mask_np*x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .07})
-                to_visualize.append({'title': 'x', 'tensor': x, 'cmap': 'gray', 'vmax': 1})
-                to_visualize.append({'title': 'x_rec', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1})
-                # to_visualize.append({'title': 'gt', 'tensor': masks})
+                to_visualize.append({'title': f'Final Res {(combined_mask_np*x_lpips_2*x_res_2).max():.3f}', 'tensor': combined_mask_np*x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .07})
+                to_visualize.append({'title': 'gt', 'tensor': masks})
 
                 for i in range(len(x)):
                     if torch.sum(masks[i][0]) > self.model.threshold_low and torch.sum(masks[i][0]) <= self.model.threshold_high: # get the desired sizes of anomalies
@@ -367,89 +351,89 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                             self._log_visualization(to_visualize, i, count)
 
                         # x_i = x[i][0]
-                        # rec_2_i = final_inpainted_image[i][0]
+                        rec_2_i = final_inpainted_image[i][0]
 
                         # Evaluate on residual and combined maps from first step
-                        # res_2_i_np = x_res_2[i][0] * combined_mask[i][0].cpu().detach().numpy()
-                        # anomalous_pred.append(res_2_i_np.max())
+                        res_2_i_np = x_res_2[i][0] * combined_mask[i][0].cpu().detach().numpy()
+                        anomalous_pred.append(res_2_i_np.max())
 
-                        # pred_.append(res_2_i_np)
-                        # label_.append(masks[i][0].cpu().detach().numpy())
+                        pred_.append(res_2_i_np)
+                        label_.append(masks[i][0].cpu().detach().numpy())
 
                         # Similarity metrics: x_rec vs. x
-                        # loss_mae = self.criterion_rec(rec_2_i, x_i)
-                        # test_metrics['MAE'].append(loss_mae.item())
-                        # loss_lpips = np.squeeze(lpips_alex(x_i.cpu(), rec_2_i.cpu()).detach().numpy())
-                        # test_metrics['LPIPS'].append(loss_lpips)
-                        # ssim_ = ssim(rec_2_i.cpu().detach().numpy(), x_i.cpu().detach().numpy(), data_range=1.)
-                        # test_metrics['SSIM'].append(ssim_)
+                        loss_mae = self.criterion_rec(rec_2_i, x_i)
+                        test_metrics['MAE'].append(loss_mae.item())
+                        loss_lpips = np.squeeze(lpips_alex(x_i.cpu(), rec_2_i.cpu()).detach().numpy())
+                        test_metrics['LPIPS'].append(loss_lpips)
+                        ssim_ = ssim(rec_2_i.cpu().detach().numpy(), x_i.cpu().detach().numpy(), data_range=1.)
+                        test_metrics['SSIM'].append(ssim_)
 
-        #             elif torch.sum(masks[i][0]) <= 1: # use slices without anomalies as "healthy" examples on same domain
-        #                 res_2_i_np_healthy = x_res_2[i][0] * combined_mask[i][0].cpu().detach().numpy()
-        #                 healthy_pred.append(res_2_i_np_healthy.max())
+                    elif torch.sum(masks[i][0]) <= 1: # use slices without anomalies as "healthy" examples on same domain
+                        res_2_i_np_healthy = x_res_2[i][0] * combined_mask[i][0].cpu().detach().numpy()
+                        healthy_pred.append(res_2_i_np_healthy.max())
         #
         #
-        #     pred_dict[dataset_key] = (pred_, label_)
+            pred_dict[dataset_key] = (pred_, label_)
         #
-        #     for metric in test_metrics:
-        #         logging.info('{}: {} mean: {} +/- {}'.format(dataset_key, metric, np.nanmean(test_metrics[metric]),
-        #                                                  np.nanstd(test_metrics[metric])))
-        #         metrics[metric].append(test_metrics[metric])
+            for metric in test_metrics:
+                logging.info('{}: {} mean: {} +/- {}'.format(dataset_key, metric, np.nanmean(test_metrics[metric]),
+                                                         np.nanstd(test_metrics[metric])))
+                metrics[metric].append(test_metrics[metric])
         #
         #
-        # for dataset_key in self.test_data_dict.keys():
-        #     # Get some stats on prediction set
-        #     pred_ood, label_ood = pred_dict[dataset_key]
-        #     predictions = np.asarray(pred_ood)
-        #     labels = np.asarray(label_ood)
-        #     predictions_all = np.reshape(np.asarray(predictions), (len(predictions), -1))  # .flatten()
-        #     labels_all = np.reshape(np.asarray(labels), (len(labels), -1))  # .flatten()
-        #     print(f'Nr of preditions: {predictions_all.shape}')
-        #     print(f'Predictions go from {np.min(predictions_all)} to {np.max(predictions_all)} with mean: {np.mean(predictions_all)}')
-        #     print(f'Labels go from {np.min(labels_all)} to {np.max(labels_all)} with mean: {np.mean(labels_all)}')
-        #     print('Shapes {} {} '.format(labels.shape, predictions.shape))
-        #
-        #     # Compute global anomaly localization metrics
-        #     dice_scores = []
-        #
-        #     auprc_, _, _, _ = compute_auprc(predictions_all, labels_all)
-        #     logging.info(f'Global AUPRC score: {auprc_}')
-        #     wandb.log({f'Metrics/Global_AUPRC_{dataset_key}': auprc_})
-        #
-        #     # Compute dice score for linear thresholds from 0 to 1
-        #     ths = np.linspace(0, 1, 101)
-        #     for dice_threshold in ths:
-        #         dice = compute_dice(copy.deepcopy(predictions_all), copy.deepcopy(labels_all), dice_threshold)
-        #         dice_scores.append(dice)
-        #     highest_score_index = np.argmax(dice_scores)
-        #     highest_score = dice_scores[highest_score_index]
-        #
-        #     logging.info(f'Global highest DICE: {highest_score}')
-        #     wandb.log({f'Metrics/Global_highest_DICE': highest_score})
-        #
-        # # Plot box plots over the metrics per image
-        # logging.info('Writing plots...')
-        # for metric in metrics:
-        #     fig_bp = go.Figure()
-        #     x = []
-        #     y = []
-        #     for idx, dataset_values in enumerate(metrics[metric]):
-        #         dataset_name = list(self.test_data_dict)[idx]
-        #         for dataset_val in dataset_values:
-        #             y.append(dataset_val)
-        #             x.append(dataset_name)
-        #
-        #     fig_bp.add_trace(go.Box(
-        #         y=y,
-        #         x=x,
-        #         name=metric,
-        #         boxmean='sd'
-        #     ))
-        #     title = 'score'
-        #     fig_bp.update_layout(
-        #         yaxis_title=title,
-        #         boxmode='group',  # group together boxes of the different traces for each value of x
-        #         yaxis=dict(range=[0, 1]),
-        #     )
-        #     fig_bp.update_yaxes(range=[0, 1], title_text='score', tick0=0, dtick=0.1, showgrid=False)
-        #     wandb.log({f'Metrics/{self.name}_{metric}': fig_bp})
+        for dataset_key in self.test_data_dict.keys():
+            # Get some stats on prediction set
+            pred_ood, label_ood = pred_dict[dataset_key]
+            predictions = np.asarray(pred_ood)
+            labels = np.asarray(label_ood)
+            predictions_all = np.reshape(np.asarray(predictions), (len(predictions), -1))  # .flatten()
+            labels_all = np.reshape(np.asarray(labels), (len(labels), -1))  # .flatten()
+            print(f'Nr of preditions: {predictions_all.shape}')
+            print(f'Predictions go from {np.min(predictions_all)} to {np.max(predictions_all)} with mean: {np.mean(predictions_all)}')
+            print(f'Labels go from {np.min(labels_all)} to {np.max(labels_all)} with mean: {np.mean(labels_all)}')
+            print('Shapes {} {} '.format(labels.shape, predictions.shape))
+
+            # Compute global anomaly localization metrics
+            dice_scores = []
+
+            auprc_, _, _, _ = compute_auprc(predictions_all, labels_all)
+            logging.info(f'Global AUPRC score: {auprc_}')
+            wandb.log({f'Metrics/Global_AUPRC_{dataset_key}': auprc_})
+
+            # Compute dice score for linear thresholds from 0 to 1
+            ths = np.linspace(0, 1, 101)
+            for dice_threshold in ths:
+                dice = compute_dice(copy.deepcopy(predictions_all), copy.deepcopy(labels_all), dice_threshold)
+                dice_scores.append(dice)
+            highest_score_index = np.argmax(dice_scores)
+            highest_score = dice_scores[highest_score_index]
+
+            logging.info(f'Global highest DICE: {highest_score}')
+            wandb.log({f'Metrics/Global_highest_DICE': highest_score})
+
+        # Plot box plots over the metrics per image
+        logging.info('Writing plots...')
+        for metric in metrics:
+            fig_bp = go.Figure()
+            x = []
+            y = []
+            for idx, dataset_values in enumerate(metrics[metric]):
+                dataset_name = list(self.test_data_dict)[idx]
+                for dataset_val in dataset_values:
+                    y.append(dataset_val)
+                    x.append(dataset_name)
+
+            fig_bp.add_trace(go.Box(
+                y=y,
+                x=x,
+                name=metric,
+                boxmean='sd'
+            ))
+            title = 'score'
+            fig_bp.update_layout(
+                yaxis_title=title,
+                boxmode='group',  # group together boxes of the different traces for each value of x
+                yaxis=dict(range=[0, 1]),
+            )
+            fig_bp.update_yaxes(range=[0, 1], title_text='score', tick0=0, dtick=0.1, showgrid=False)
+            wandb.log({f'Metrics/{self.name}_{metric}': fig_bp})
