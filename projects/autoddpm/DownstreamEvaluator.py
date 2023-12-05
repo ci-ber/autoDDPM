@@ -350,7 +350,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                         if int(count) % 12 == 0 or int(count) in [0, 66, 325, 352, 545, 548, 231, 609, 616, 11, 254, 539, 165, 545, 550, 92, 616, 628, 630, 636, 651]:
                             self._log_visualization(to_visualize, i, count)
 
-                        # x_i = x[i][0]
+                        x_i = x[i][0]
                         rec_2_i = final_inpainted_image[i][0]
 
                         # Evaluate on residual and combined maps from first step
