@@ -230,11 +230,11 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 masks[masks>0] = 1
 
                 x_rec = torch.zeros_like(x)
-                # if not os.path.exists(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')):
-                #         os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}'), exist_ok=True)
-                #         os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}'), exist_ok=True)
-                #         x_rec, _ = self.model.sample_from_image(x, noise_level=self.model.noise_level_recon)
-                #         x_rec = torch.clamp(x_rec, 0, 1)
+                if not os.path.exists(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')):
+                        os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}'), exist_ok=True)
+                        os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}'), exist_ok=True)
+                        x_rec, _ = self.model.sample_from_image(x, noise_level=self.model.noise_level_recon)
+                        x_rec = torch.clamp(x_rec, 0, 1)
                 # for i in range(x.shape[0]):
                 #     path_to_rec = os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')
                 #     path_to_image = os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}', f'image_{global_counter}.png')
