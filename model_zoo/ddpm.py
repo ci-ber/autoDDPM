@@ -188,7 +188,7 @@ class DDPM(nn.Module):
                              save_intermediates: bool | None = False,
                              verbose: bool = False):
 
-        x_rec, _ = self.model.sample_from_image(inputs, noise_level=noise_level_recon,
+        x_rec, _ = self.sample_from_image(inputs, noise_level=noise_level_recon,
                                                 save_intermediates=save_intermediates, verbose=verbose)
         x_rec = torch.clamp(x_rec, 0, 1)
         x_res = self.compute_residual(x, x_rec, hist_eq=False)
