@@ -263,7 +263,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 # mask_in_use = combined_mask_binary_dilated
                 #
                 to_visualize = [
-                    {'title': f'l1/95th perc {x.max():.3f}', 'tensor': x, 'cmap': 'plasma'}],
+                    {'title': f'l1/95th perc {x.max():.3f}', 'tensor': x, 'cmap': 'plasma'}]
                     # {'title': f'l1/95th perc {x_res.max():.3f}', 'tensor': x_res, 'cmap': 'plasma'}
                 #     {'title': f'lpips {lpips_mask.max():.3f}', 'tensor': lpips_mask, 'cmap': 'plasma', 'vmax': .4},
                 #     {'title': f'combined {combined_mask.max():.3f}', 'tensor': combined_mask, 'cmap': 'plasma', 'vmax': .3},
