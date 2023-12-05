@@ -9,8 +9,8 @@ checkpoint_path: &checkpoint_path ./projects/autoddpm/weights/runs/
 #
 experiment:
   name: DDPM
-  task: test
-  weights: # ./projects/autoddpm/weights/pretrained/Pretrainer_3000ep_128x/best_model.pt
+  task: train
+  weights: #./projects/autoddpm/weights/pretrained/Pretrainer_3000ep_128x/best_model.pt
 
 device: gpu
 configurator:
@@ -65,7 +65,7 @@ trainer:
     input_size: *target_size
     checkpoint_path: *checkpoint_path
     batch_size: *tbatch_size
-    nr_epochs: 999
+    nr_epochs: 0 #999
     val_interval: 50
     # Loss
     loss:
