@@ -149,14 +149,24 @@ class DDPM(nn.Module):
         :param retPerLayer: whether to return the loss per layer
         :return: LPIPS loss
         """
+        if len(ph_img.shape) < 2:
+            print('Image should have 2 dimensions at lease (LPIPS)')
+            return
         if len(ph_img.shape) == 2:
             ph_img = torch.unsqueeze(torch.unsqueeze(ph_img, 0), 0)
             anomaly_img = torch.unsqueeze(torch.unsqueeze(anomaly_img, 0), 0)
+        if len(ph_img.shape) == 3:
+            ph_img = torch.unsqueeze(ph_img, 0)
+            anomaly_img = torch.unsqueeze(anomaly_img, 0)
 
-        loss_lpips = self.l_pips_sq(anomaly_img, ph_img, normalize=True, retPerLayer=retPerLayer)
-        if retPerLayer:
-            loss_lpips = loss_lpips[1][0]
-        return loss_lpips.cpu().detach().numpy()
+        saliency_maps = []
+        for batch_id in range(anomaly_img.size(0)):
+            lpips = self.l_pips_sq(anomaly_img[batch_id:batch_id+1,:,:,:], ph_img[batch_id:batch_id+1,:,:,:],
+                                   normalize=True, retPerLayer=retPerLayer)
+            if retPerLayer:
+                lpips = lpips[1][0]
+            saliency_maps.append(lpips[0].cpu().detach().numpy)
+        return np.asarray(saliency_maps)
 
     @torch.no_grad()
     def get_anomaly(self, inputs: torch.Tensor,
@@ -191,8 +201,8 @@ class DDPM(nn.Module):
         x_rec, _ = self.sample_from_image(inputs, noise_level=noise_level_recon,
                                                 save_intermediates=save_intermediates, verbose=verbose)
         x_rec = torch.clamp(x_rec, 0, 1)
-        x_res = self.compute_residual(x, x_rec, hist_eq=False)
-        lpips_mask = self.lpips_loss(x, x_rec, retPerLayer=False)
+        x_res = self.compute_residual(inputs, x_rec, hist_eq=False)
+        lpips_mask = self.lpips_loss(inputs, x_rec, retPerLayer=False)
         #
         # anomalous: high value, healthy: low value
         x_res = np.asarray([(x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0])]).clip(0, 1)
@@ -206,13 +216,13 @@ class DDPM(nn.Module):
         # In-painting setup
         # 1. Mask the original image (get rid of anomalies) and the reconstructed image (keep pseudo-healthy
         # counterparts)
-        x_masked = (1 - mask_in_use) * x
+        x_masked = (1 - mask_in_use) * inputs
         x_rec_masked = mask_in_use * x_rec
         #
         #
         # 2. Start in-painting with reconstructed image and not pure noise
         noise = torch.randn_like(x_rec, device=self.device)
-        timesteps = torch.full([x.shape[0]], noise_level_inpaint, device=self.device).long()
+        timesteps = torch.full([inputs.shape[0]], noise_level_inpaint, device=self.device).long()
         inpaint_image = self.inference_scheduler.add_noise(
             original_samples=x_rec, noise=noise, timesteps=timesteps
         )
@@ -230,7 +240,7 @@ class DDPM(nn.Module):
                     for u in range(num_resample_steps):
                         # 4a) Get the known portion at t-1
                         if t > 0:
-                            noise = torch.randn_like(x, device=self.device)
+                            noise = torch.randn_like(inputs, device=self.device)
                             timesteps_prev = torch.full([x.shape[0]], t - 1, device=self.device).long()
                             noised_masked_original_context = self.inference_scheduler.add_noise(
                                 original_samples=x_masked, noise=noise, timesteps=timesteps_prev
@@ -240,7 +250,7 @@ class DDPM(nn.Module):
                         #
                         # 4b) Perform a denoising step to get the unknown portion at t-1
                         if t > 0:
-                            timesteps = torch.full([x.shape[0]], t, device=self.device).long()
+                            timesteps = torch.full([inputs.shape[0]], t, device=self.device).long()
                             model_output = self.unet(x=inpaint_image, timesteps=timesteps)
                             inpainted_from_x_rec, _ = self.inference_scheduler.step(model_output, t,
                                                                                           inpaint_image)
@@ -256,12 +266,12 @@ class DDPM(nn.Module):
                             inpaint_image = (
                                     torch.sqrt(1 - self.inference_scheduler.betas[t - 1]) * inpaint_image
                                     + torch.sqrt(self.inference_scheduler.betas[t - 1])
-                                    * torch.randn_like(x, device=self.device)
+                                    * torch.randn_like(inputs, device=self.device)
                             )
 
         final_inpainted_image = inpaint_image
-        x_res_2 = self.compute_residual(x, final_inpainted_image.clamp(0, 1), hist_eq=False)
-        x_lpips_2 = self.lpips_loss(x, final_inpainted_image, retPerLayer=False)
+        x_res_2 = self.compute_residual(inputs, final_inpainted_image.clamp(0, 1), hist_eq=False)
+        x_lpips_2 = self.lpips_loss(inputs, final_inpainted_image, retPerLayer=False)
         anomaly_maps = x_res_2 * combined_mask.cpu().detach().numpy()
         anomaly_scores = np.mean(anomaly_maps, axis=(1, 2, 3), keepdims=True)
 
