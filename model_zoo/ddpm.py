@@ -175,8 +175,8 @@ class DDPM(nn.Module):
             x_rec_dict = {'x_rec': x_rec}
         else:
             anomaly_maps, anomaly_scores, x_rec_dict = self.get_autoDDPM_anomaly(inputs=inputs,
-                                                                                  noise_level_coarse=noise_level,
-                                                                                  noise_level_fine=self.noise_level_inpaint,
+                                                                                  noise_level_recon=noise_level,
+                                                                                  noise_level_inpaint=self.noise_level_inpaint,
                                                                                   save_intermediates=save_intermediates,
                                                                                   verbose=verbose)
         return anomaly_maps, anomaly_scores, x_rec_dict
