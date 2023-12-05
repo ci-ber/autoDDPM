@@ -228,177 +228,176 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 print(f'min: {torch.min(x)}, max: {torch.max(x)} mean: {torch.mean(x)}')
                 masks = data[1].to(self.device)
                 masks[masks>0] = 1
-                to_visualize.append({'title': 'x', 'tensor': x*255, 'cmap': 'gray', 'vmax': 1})
-                to_visualize.append({'title': 'x', 'tensor': x*255, 'cmap': 'gray', 'vmax': 1})
 
+                x_rec = torch.zeros_like(x)
+                # if not os.path.exists(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')):
+                #         os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}'), exist_ok=True)
+                #         os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}'), exist_ok=True)
+                #         x_rec, _ = self.model.sample_from_image(x, noise_level=self.model.noise_level_recon)
+                #         x_rec = torch.clamp(x_rec, 0, 1)
+                # for i in range(x.shape[0]):
+                #     path_to_rec = os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')
+                #     path_to_image = os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}', f'image_{global_counter}.png')
+                #     global_counter += 1
+                #     if os.path.exists(path_to_rec):
+                        load reconstructed images
+                        # noised = Image.open(path_to_rec).convert('L')
+                        # x_rec[i] = transforms.ToTensor()(noised)
+                        load original images
+                        # orig = Image.open(path_to_image).convert('L')
+                        # x[i] = transforms.ToTensor()(orig)
+                    # else:
+                    #     save_image(x_rec[i], path_to_rec)
+                    #     save_image(x[i], path_to_image)
+                    #     print("Saved image at path:", path_to_rec)
+                #
+                # x_res = self.compute_residual(x, x_rec, hist_eq=False)
+                # lpips_mask = self.lpips_loss(x, x_rec, retPerLayer=False)
+                #
+                # anomalous: high value, healthy: low value
+                # x_res = np.asarray([ (x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0]) ]).clip(0, 1)
+                # combined_mask_np = lpips_mask * x_res
+                # combined_mask = torch.Tensor(combined_mask_np).to(self.device)
+                # combined_mask_binary = torch.where(combined_mask > th, torch.ones_like(combined_mask), torch.zeros_like(combined_mask))
+                # combined_mask_binary_dilated = self.dilate_masks(combined_mask_binary)
+                # mask_in_use = combined_mask_binary_dilated
+                #
+                # to_visualize = [
+                #     {'title': f'l1/95th perc {x_res.max():.3f}', 'tensor': x_res, 'cmap': 'plasma'},
+                #     {'title': f'lpips {lpips_mask.max():.3f}', 'tensor': lpips_mask, 'cmap': 'plasma', 'vmax': .4},
+                #     {'title': f'combined {combined_mask.max():.3f}', 'tensor': combined_mask, 'cmap': 'plasma', 'vmax': .3},
+                #     {'title': f'combined_binary', 'tensor': combined_mask_binary,},
+                #     {'title': f'comb_bin_dilated', 'tensor': combined_mask_binary_dilated,},
+                # ]
+                # threshold_masks.append(np.percentile(combined_mask.cpu().detach().numpy(), 95).mean()) # approximator for good threshold
+                #
+                #
+                ## Inpainting setup (inspired by RePaint)
+                # 1. Mask the original image (get rid of anomalies) and the reconstructed image (keep reconstructed spots of original anomalies to start inpainting from)
+                # x_masked = (1 - mask_in_use) * x
+                # x_rec_masked = mask_in_use * x_rec
+                #
+                # to_visualize.append({'title': f'x_masked', 'tensor': x_masked,})
+                # to_visualize.append({'title': f'x_rec_masked', 'tensor': x_rec_masked,})
+                # to_visualize.append({'title': f'just stitched', 'tensor': x_masked + x_rec_masked,})
+                #
+                # 2. Start inpainting with reconstructed image and not pure noise
+                # noise = torch.randn_like(x_rec, device=self.device)
+                # timesteps = torch.full([x.shape[0]], self.model.noise_level_inpaint, device=self.device).long()
+                # inpaint_image = self.model.inference_scheduler.add_noise(
+                #     original_samples=x_rec, noise=noise, timesteps=timesteps
+                # )
 
-        #         x_rec = torch.zeros_like(x)
-        #         if not os.path.exists(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')):
-        #                 os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}'), exist_ok=True)
-        #                 os.makedirs(os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}'), exist_ok=True)
-        #                 x_rec, _ = self.model.sample_from_image(x, noise_level=self.model.noise_level_recon)
-        #                 x_rec = torch.clamp(x_rec, 0, 1)
-        #         for i in range(x.shape[0]):
-        #             path_to_rec = os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')
-        #             path_to_image = os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}', f'image_{global_counter}.png')
-        #             global_counter += 1
-        #             if os.path.exists(path_to_rec):
-        #                 # load reconstructed images
-        #                 noised = Image.open(path_to_rec).convert('L')
-        #                 x_rec[i] = transforms.ToTensor()(noised)
-        #                 # load original images
-        #                 orig = Image.open(path_to_image).convert('L')
-        #                 x[i] = transforms.ToTensor()(orig)
-        #             else:
-        #                 save_image(x_rec[i], path_to_rec)
-        #                 save_image(x[i], path_to_image)
-        #                 print("Saved image at path:", path_to_rec)
-        #
-        #         x_res = self.compute_residual(x, x_rec, hist_eq=False)
-        #         lpips_mask = self.lpips_loss(x, x_rec, retPerLayer=False)
-        #
-        #         # anomalous: high value, healthy: low value
-        #         x_res = np.asarray([ (x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0]) ]).clip(0, 1)
-        #         combined_mask_np = lpips_mask * x_res
-        #         combined_mask = torch.Tensor(combined_mask_np).to(self.device)
-        #         combined_mask_binary = torch.where(combined_mask > th, torch.ones_like(combined_mask), torch.zeros_like(combined_mask))
-        #         combined_mask_binary_dilated = self.dilate_masks(combined_mask_binary)
-        #         mask_in_use = combined_mask_binary_dilated
-        #
-        #         to_visualize = [
-        #             {'title': f'l1/95th perc {x_res.max():.3f}', 'tensor': x_res, 'cmap': 'plasma'},
-        #             {'title': f'lpips {lpips_mask.max():.3f}', 'tensor': lpips_mask, 'cmap': 'plasma', 'vmax': .4},
-        #             {'title': f'combined {combined_mask.max():.3f}', 'tensor': combined_mask, 'cmap': 'plasma', 'vmax': .3},
-        #             {'title': f'combined_binary', 'tensor': combined_mask_binary,},
-        #             {'title': f'comb_bin_dilated', 'tensor': combined_mask_binary_dilated,},
-        #         ]
-        #         threshold_masks.append(np.percentile(combined_mask.cpu().detach().numpy(), 95).mean()) # approximator for good threshold
-        #
-        #
-        #         ### Inpainting setup (inspired by RePaint)
-        #         # 1. Mask the original image (get rid of anomalies) and the reconstructed image (keep reconstructed spots of original anomalies to start inpainting from)
-        #         x_masked = (1 - mask_in_use) * x
-        #         x_rec_masked = mask_in_use * x_rec
-        #
-        #         to_visualize.append({'title': f'x_masked', 'tensor': x_masked,})
-        #         to_visualize.append({'title': f'x_rec_masked', 'tensor': x_rec_masked,})
-        #         to_visualize.append({'title': f'just stitched', 'tensor': x_masked + x_rec_masked,})
-        #
-        #         # 2. Start inpainting with reconstructed image and not pure noise
-        #         noise = torch.randn_like(x_rec, device=self.device)
-        #         timesteps = torch.full([x.shape[0]], self.model.noise_level_inpaint, device=self.device).long()
-        #         inpaint_image = self.model.inference_scheduler.add_noise(
-        #             original_samples=x_rec, noise=noise, timesteps=timesteps
-        #         )
-        #
-        #         # 3. Setup for loop
-        #         timesteps = self.model.inference_scheduler.get_timesteps(self.model.noise_level_inpaint)
-        #         from tqdm import tqdm
-        #         # try:
-        #         #     progress_bar = tqdm(timesteps)
-        #         # except:
-        #         progress_bar = iter(timesteps)
-        #         num_resample_steps = self.model.resample_steps
-        #         # stitched_images = []
-        #
-        #         # 4. Inpainting loop
-        #         os.makedirs(self.model.image_path, exist_ok=True)
-        #         if os.path.exists(os.path.join(self.model.image_path, f'image_{idx * len(x)}.png')):
-        #             x_rec_inpainted = torch.zeros_like(x)
-        #             for i in range(x.shape[0]):
-        #                 count = str(idx * len(x) + i)
-        #                 path_to_rec = os.path.join(self.model.image_path, f'image_{count}.png')
-        #                 inpainted = Image.open(path_to_rec).convert('L')
-        #                 x_rec_inpainted[i] = transforms.ToTensor()(inpainted).to('cuda')
-        #             final_inpainted_image = x_rec_inpainted
-        #         else:
-        #             with torch.no_grad():
-        #                 with autocast(enabled=True):
-        #                     for t in progress_bar:
-        #                         for u in range(num_resample_steps):
-        #                             # 4a) Get the known portion at t-1
-        #                             if t > 0:
-        #                                 noise = torch.randn_like(x, device=self.device)
-        #                                 timesteps_prev = torch.full([x.shape[0]], t - 1, device=self.device).long()
-        #                                 noised_masked_original_context = self.model.inference_scheduler.add_noise(
-        #                                     original_samples=x_masked, noise=noise, timesteps=timesteps_prev
-        #                                 )
-        #                             else:
-        #                                 noised_masked_original_context = x_masked
-        #
-        #                             # 4b) Perform a denoising step to get the unknown portion at t-1
-        #                             if t > 0:
-        #                                 timesteps = torch.full([x.shape[0]], t, device=self.device).long()
-        #                                 model_output = self.model.unet(x=inpaint_image, timesteps=timesteps)
-        #                                 inpainted_from_x_rec, _ = self.model.inference_scheduler.step(model_output, t, inpaint_image)
-        #
-        #                             # 4c) Combine the known and unknown portions at t-1
-        #                             inpaint_image = torch.where(
-        #                                 mask_in_use == 1, inpainted_from_x_rec, noised_masked_original_context
-        #                             )
-        #                             # torch.cat([noised_masked_original_context, inpainted_from_x_rec, val_image_inpainted], dim=2)
-        #                             # stitched_images.append(inpaint_image)
-        #
-        #                             # 4d) Perform resampling: sample x_t from x_t-1 -> get new image to be inpainted in the masked region
-        #                             if t > 0 and u < (num_resample_steps - 1):
-        #                                 inpaint_image = (
-        #                                     torch.sqrt(1 - self.model.inference_scheduler.betas[t - 1]) * inpaint_image
-        #                                     + torch.sqrt(self.model.inference_scheduler.betas[t - 1]) * torch.randn_like(x, device=self.device)
-        #                                 )
-        #
-        #             # store inpainted images
-        #             # for i in range(x.shape[0]):
-        #             #     count = str(idx * len(x) + i)
-        #             #     path_to_inpainted = os.path.join(self.model.image_path, f'image_{count}.png')
-        #                 # save_image(inpaint_image[i][0], path_to_inpainted)
-        #                 # print(f'Saved inpainted image to {path_to_inpainted}')
-        #             final_inpainted_image = inpaint_image
-        #
-        #         print("95th percentile: ", sum(threshold_masks) / len(threshold_masks))
-        #
-        #         # 5. Compute new residual and anomaly maps
-        #         x_res_2 = self.compute_residual(x, final_inpainted_image.clamp(0, 1), hist_eq=False)
-        #         x_lpips_2 = self.lpips_loss(x, final_inpainted_image, retPerLayer=False)
-        #
-        #         to_visualize.append({'title': 'final inpainted image', 'tensor': final_inpainted_image})
-        #         to_visualize.append({'title': f'l1 w/ inp. (now eval) {x_res_2.max():.3f}', 'tensor': x_res_2, 'cmap': 'plasma', 'vmax': .9})
-        #         to_visualize.append({'title': f'lpips w/ inpainted {x_lpips_2.max():.3f}', 'tensor': x_lpips_2, 'cmap': 'plasma', 'vmax': .4})
-        #         to_visualize.append({'title': f'comb. w/ inpainted {(x_lpips_2*x_res_2).max():.3f}', 'tensor': x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .2})
-        #         to_visualize.append({'title': f'comb before*after {(combined_mask_np*x_lpips_2*x_res_2).max():.3f}', 'tensor': combined_mask_np*x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .07})
-        #         to_visualize.append({'title': 'x', 'tensor': x*255, 'cmap': 'gray', 'vmax': 1})
-        #         to_visualize.append({'title': 'x_rec', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1})
-        #         to_visualize.append({'title': 'gt', 'tensor': masks})
-        #
+                # 3. Setup for loop
+                # timesteps = self.model.inference_scheduler.get_timesteps(self.model.noise_level_inpaint)
+                # from tqdm import tqdm
+                # try:
+                #     progress_bar = tqdm(timesteps)
+                # except:
+                # progress_bar = iter(timesteps)
+                # num_resample_steps = self.model.resample_steps
+                # stitched_images = []
+
+                # 4. Inpainting loop
+                # os.makedirs(self.model.image_path, exist_ok=True)
+                # if os.path.exists(os.path.join(self.model.image_path, f'image_{idx * len(x)}.png')):
+                #     x_rec_inpainted = torch.zeros_like(x)
+                #     for i in range(x.shape[0]):
+                #         count = str(idx * len(x) + i)
+                #         path_to_rec = os.path.join(self.model.image_path, f'image_{count}.png')
+                #         inpainted = Image.open(path_to_rec).convert('L')
+                #         x_rec_inpainted[i] = transforms.ToTensor()(inpainted).to('cuda')
+                #     final_inpainted_image = x_rec_inpainted
+                # else:
+                #     with torch.no_grad():
+                #         with autocast(enabled=True):
+                #             for t in progress_bar:
+                #                 for u in range(num_resample_steps):
+                                    # 4a) Get the known portion at t-1
+                                    # if t > 0:
+                                    #     noise = torch.randn_like(x, device=self.device)
+                                    #     timesteps_prev = torch.full([x.shape[0]], t - 1, device=self.device).long()
+                                    #     noised_masked_original_context = self.model.inference_scheduler.add_noise(
+                                    #         original_samples=x_masked, noise=noise, timesteps=timesteps_prev
+                                    #     )
+                                    # else:
+                                    #     noised_masked_original_context = x_masked
+                                    #
+                                    # 4b) Perform a denoising step to get the unknown portion at t-1
+                                    # if t > 0:
+                                    #     timesteps = torch.full([x.shape[0]], t, device=self.device).long()
+                                    #     model_output = self.model.unet(x=inpaint_image, timesteps=timesteps)
+                                    #     inpainted_from_x_rec, _ = self.model.inference_scheduler.step(model_output, t, inpaint_image)
+                                    #
+                                    # 4c) Combine the known and unknown portions at t-1
+                                    # inpaint_image = torch.where(
+                                    #     mask_in_use == 1, inpainted_from_x_rec, noised_masked_original_context
+                                    # )
+                                    ## torch.cat([noised_masked_original_context, inpainted_from_x_rec,
+                # val_image_inpainted], dim=2)
+                                    ## stitched_images.append(inpaint_image)
+
+                                    ## 4d) Perform resampling: sample x_t from x_t-1 -> get new image to be inpainted
+                # in the masked region
+                #                     if t > 0 and u < (num_resample_steps - 1):
+                #                         inpaint_image = (
+                #                             torch.sqrt(1 - self.model.inference_scheduler.betas[t - 1]) * inpaint_image
+                #                             + torch.sqrt(self.model.inference_scheduler.betas[t - 1]) * torch.randn_like(x, device=self.device)
+                #                         )
+                #
+                ##     store inpainted images
+                #    # for i in range(x.shape[0]):
+                #    #     count = str(idx * len(x) + i)
+                #    #     path_to_inpainted = os.path.join(self.model.image_path, f'image_{count}.png')
+                #        # save_image(inpaint_image[i][0], path_to_inpainted)
+                #        # print(f'Saved inpainted image to {path_to_inpainted}')
+                #    final_inpainted_image = inpaint_image
+
+                # print("95th percentile: ", sum(threshold_masks) / len(threshold_masks))
+
+                # 5. Compute new residual and anomaly maps
+                # x_res_2 = self.compute_residual(x, final_inpainted_image.clamp(0, 1), hist_eq=False)
+                # x_lpips_2 = self.lpips_loss(x, final_inpainted_image, retPerLayer=False)
+
+                # to_visualize.append({'title': 'final inpainted image', 'tensor': final_inpainted_image})
+                # to_visualize.append({'title': f'l1 w/ inp. (now eval) {x_res_2.max():.3f}', 'tensor': x_res_2, 'cmap': 'plasma', 'vmax': .9})
+                # to_visualize.append({'title': f'lpips w/ inpainted {x_lpips_2.max():.3f}', 'tensor': x_lpips_2, 'cmap': 'plasma', 'vmax': .4})
+                # to_visualize.append({'title': f'comb. w/ inpainted {(x_lpips_2*x_res_2).max():.3f}', 'tensor': x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .2})
+                # to_visualize.append({'title': f'comb before*after {(combined_mask_np*x_lpips_2*x_res_2).max():.3f}', 'tensor': combined_mask_np*x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .07})
+                to_visualize.append({'title': 'x', 'tensor': x, 'cmap': 'gray', 'vmax': 1})
+                # to_visualize.append({'title': 'x_rec', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1})
+                # to_visualize.append({'title': 'gt', 'tensor': masks})
+
                 for i in range(len(x)):
                     if torch.sum(masks[i][0]) > self.model.threshold_low and torch.sum(masks[i][0]) <= self.model.threshold_high: # get the desired sizes of anomalies
                         count = str(idx * len(x) + i)
-        #                 # Don't use images with large black artifacts:
-        #                 if int(count) in [100, 105, 112, 121, 186, 189, 210,214, 345, 382, 424, 425, 435, 434, 441, 462, 464, 472, 478, 504]:
-        #                     print("skipping ", count)
-        #                     continue
-        #
-        #                 # Example visualizations
+                    #     Don't use images with large black artifacts:
+                        if int(count) in [100, 105, 112, 121, 186, 189, 210,214, 345, 382, 424, 425, 435, 434, 441, 462, 464, 472, 478, 504]:
+                            print("skipping ", count)
+                            continue
+
+                        # Example visualizations
                         if int(count) % 12 == 0 or int(count) in [0, 66, 325, 352, 545, 548, 231, 609, 616, 11, 254, 539, 165, 545, 550, 92, 616, 628, 630, 636, 651]:
                             self._log_visualization(to_visualize, i, count)
-        #
-        #                 x_i = x[i][0]
-        #                 rec_2_i = final_inpainted_image[i][0]
-        #
-        #                 # Evaluate on residual and combined maps from first step
-        #                 res_2_i_np = x_res_2[i][0] * combined_mask[i][0].cpu().detach().numpy()
-        #                 anomalous_pred.append(res_2_i_np.max())
-        #
-        #                 pred_.append(res_2_i_np)
-        #                 label_.append(masks[i][0].cpu().detach().numpy())
-        #
-        #                 # Similarity metrics: x_rec vs. x
-        #                 loss_mae = self.criterion_rec(rec_2_i, x_i)
-        #                 test_metrics['MAE'].append(loss_mae.item())
-        #                 loss_lpips = np.squeeze(lpips_alex(x_i.cpu(), rec_2_i.cpu()).detach().numpy())
-        #                 test_metrics['LPIPS'].append(loss_lpips)
-        #                 ssim_ = ssim(rec_2_i.cpu().detach().numpy(), x_i.cpu().detach().numpy(), data_range=1.)
-        #                 test_metrics['SSIM'].append(ssim_)
-        #
+
+                        # x_i = x[i][0]
+                        # rec_2_i = final_inpainted_image[i][0]
+
+                        # Evaluate on residual and combined maps from first step
+                        # res_2_i_np = x_res_2[i][0] * combined_mask[i][0].cpu().detach().numpy()
+                        # anomalous_pred.append(res_2_i_np.max())
+
+                        # pred_.append(res_2_i_np)
+                        # label_.append(masks[i][0].cpu().detach().numpy())
+
+                        # Similarity metrics: x_rec vs. x
+                        # loss_mae = self.criterion_rec(rec_2_i, x_i)
+                        # test_metrics['MAE'].append(loss_mae.item())
+                        # loss_lpips = np.squeeze(lpips_alex(x_i.cpu(), rec_2_i.cpu()).detach().numpy())
+                        # test_metrics['LPIPS'].append(loss_lpips)
+                        # ssim_ = ssim(rec_2_i.cpu().detach().numpy(), x_i.cpu().detach().numpy(), data_range=1.)
+                        # test_metrics['SSIM'].append(ssim_)
+
         #             elif torch.sum(masks[i][0]) <= 1: # use slices without anomalies as "healthy" examples on same domain
         #                 res_2_i_np_healthy = x_res_2[i][0] * combined_mask[i][0].cpu().detach().numpy()
         #                 healthy_pred.append(res_2_i_np_healthy.max())
