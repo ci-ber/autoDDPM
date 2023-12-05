@@ -9,7 +9,6 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 import wandb
 import plotly.graph_objects as go
 import seaborn as sns
-import umap.umap_ as umap
 #
 from torch.nn import L1Loss
 from torch.cuda.amp import autocast
@@ -31,12 +30,10 @@ import lpips
 #
 from dl_utils import *
 from optim.metrics import *
-from optim.losses.image_losses import NCC
 from core.DownstreamEvaluator import DownstreamEvaluator
 import os
 import copy
 from model_zoo import VGGEncoder
-from optim.losses.image_losses import CosineSimLoss
 
 
 class PDownstreamEvaluator(DownstreamEvaluator):
@@ -50,12 +47,6 @@ class PDownstreamEvaluator(DownstreamEvaluator):
         self.criterion_rec = L1Loss().to(self.device)
         self.vgg_encoder = VGGEncoder().to(self.device)
         self.l_pips_sq = lpips.LPIPS(pretrained=True, net='squeeze', use_dropout=True, eval_mode=True, spatial=True, lpips=True).to(self.device)
-        self.l_cos = CosineSimLoss(device='cuda')
-        self.l_ncc = NCC(win=[9, 9])
-
-        # self.l_pips_vgg = lpips.LPIPS(pretrained=True, net='vgg', use_dropout=False, eval_mode=False, spatial=False, lpips=True).to(self.device)
-        # self.l_pips_alex = lpips.LPIPS(pretrained=True, net='alex', use_dropout=False, eval_mode=False, spatial=False, lpips=True).to(self.device)
-
         self.global_= True
 
     def start_task(self, global_model):
