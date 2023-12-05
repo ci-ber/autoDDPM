@@ -90,7 +90,7 @@ trainer:
           train:
             - './data/fastMRI/splits/ixi_normal_train.csv'
           val:
-            - './data/fastMRI/normal_test.csv'
+            - './data/fastMRI/splits/normal_test.csv'
           test:
             - './data/ATLAS/splits/atlas_train_png.csv'
 
