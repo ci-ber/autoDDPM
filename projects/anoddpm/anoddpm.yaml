@@ -85,7 +85,7 @@ trainer:
           class_name: IXILoader
         data_dir:
           train:
-            - './data/CAPS_IXI/splits/ixi_normal_train.csv'
+            - './data/fastMRI/splits/ixi_normal_train.csv'
           val:
             - './data/fastMRI/normal_test.csv'
           test:
