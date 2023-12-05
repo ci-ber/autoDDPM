@@ -240,10 +240,10 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 #     path_to_image = os.path.join(os.path.dirname(self.model.image_path), f'original_{self.model.noise_level_recon}', f'image_{global_counter}.png')
                 #     global_counter += 1
                 #     if os.path.exists(path_to_rec):
-                        load reconstructed images
+                #         load reconstructed images
                         # noised = Image.open(path_to_rec).convert('L')
                         # x_rec[i] = transforms.ToTensor()(noised)
-                        load original images
+                        # load original images
                         # orig = Image.open(path_to_image).convert('L')
                         # x[i] = transforms.ToTensor()(orig)
                     # else:
@@ -262,8 +262,9 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 # combined_mask_binary_dilated = self.dilate_masks(combined_mask_binary)
                 # mask_in_use = combined_mask_binary_dilated
                 #
-                # to_visualize = [
-                #     {'title': f'l1/95th perc {x_res.max():.3f}', 'tensor': x_res, 'cmap': 'plasma'},
+                to_visualize = [
+                    {'title': f'l1/95th perc {x.max():.3f}', 'tensor': x, 'cmap': 'plasma'}],
+                    # {'title': f'l1/95th perc {x_res.max():.3f}', 'tensor': x_res, 'cmap': 'plasma'}
                 #     {'title': f'lpips {lpips_mask.max():.3f}', 'tensor': lpips_mask, 'cmap': 'plasma', 'vmax': .4},
                 #     {'title': f'combined {combined_mask.max():.3f}', 'tensor': combined_mask, 'cmap': 'plasma', 'vmax': .3},
                 #     {'title': f'combined_binary', 'tensor': combined_mask_binary,},
@@ -365,7 +366,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 # to_visualize.append({'title': f'comb. w/ inpainted {(x_lpips_2*x_res_2).max():.3f}', 'tensor': x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .2})
                 # to_visualize.append({'title': f'comb before*after {(combined_mask_np*x_lpips_2*x_res_2).max():.3f}', 'tensor': combined_mask_np*x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .07})
                 to_visualize.append({'title': 'x', 'tensor': x, 'cmap': 'gray', 'vmax': 1})
-                # to_visualize.append({'title': 'x_rec', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1})
+                to_visualize.append({'title': 'x_rec', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1})
                 # to_visualize.append({'title': 'gt', 'tensor': masks})
 
                 for i in range(len(x)):
