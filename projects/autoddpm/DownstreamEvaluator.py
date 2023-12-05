@@ -367,17 +367,17 @@ class PDownstreamEvaluator(DownstreamEvaluator):
         #         to_visualize.append({'title': 'x_rec', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1})
         #         to_visualize.append({'title': 'gt', 'tensor': masks})
         #
-        #         for i in range(len(x)):
-        #             if torch.sum(masks[i][0]) > self.model.threshold_low and torch.sum(masks[i][0]) <= self.model.threshold_high: # get the desired sizes of anomalies
-        #                 count = str(idx * len(x) + i)
+                for i in range(len(x)):
+                    if torch.sum(masks[i][0]) > self.model.threshold_low and torch.sum(masks[i][0]) <= self.model.threshold_high: # get the desired sizes of anomalies
+                        count = str(idx * len(x) + i)
         #                 # Don't use images with large black artifacts:
         #                 if int(count) in [100, 105, 112, 121, 186, 189, 210,214, 345, 382, 424, 425, 435, 434, 441, 462, 464, 472, 478, 504]:
         #                     print("skipping ", count)
         #                     continue
         #
         #                 # Example visualizations
-        #                 if int(count) % 12 == 0 or int(count) in [0, 66, 325, 352, 545, 548, 231, 609, 616, 11, 254, 539, 165, 545, 550, 92, 616, 628, 630, 636, 651]:
-        #                     self._log_visualization(to_visualize, i, count)
+                        if int(count) % 12 == 0 or int(count) in [0, 66, 325, 352, 545, 548, 231, 609, 616, 11, 254, 539, 165, 545, 550, 92, 616, 628, 630, 636, 651]:
+                            self._log_visualization(to_visualize, i, count)
         #
         #                 x_i = x[i][0]
         #                 rec_2_i = final_inpainted_image[i][0]
