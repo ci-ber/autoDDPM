@@ -225,7 +225,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 else:
                     data0 = data[0]
                 x = data0.to(self.device)
-                print(f'min: {torch.min(x)}, max: {torch.max(x)}')
+                print(f'min: {torch.min(x)}, max: {torch.max(x)} mean: {torch.mean(x)}')
                 masks = data[1].to(self.device)
                 masks[masks>0] = 1
             
@@ -362,8 +362,8 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 to_visualize.append({'title': f'lpips w/ inpainted {x_lpips_2.max():.3f}', 'tensor': x_lpips_2, 'cmap': 'plasma', 'vmax': .4})
                 to_visualize.append({'title': f'comb. w/ inpainted {(x_lpips_2*x_res_2).max():.3f}', 'tensor': x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .2})
                 to_visualize.append({'title': f'comb before*after {(combined_mask_np*x_lpips_2*x_res_2).max():.3f}', 'tensor': combined_mask_np*x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .07})
-                to_visualize.append({'title': 'x', 'tensor': x})
-                to_visualize.append({'title': 'x_rec', 'tensor': x_rec})
+                to_visualize.append({'title': 'x', 'tensor': x, 'cmap': 'gray', 'vmax': 1})
+                to_visualize.append({'title': 'x_rec', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1})
                 to_visualize.append({'title': 'gt', 'tensor': masks})
 
                 for i in range(len(x)):
