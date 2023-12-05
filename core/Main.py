@@ -52,7 +52,8 @@ class Main(object):
         device = 'cuda' if config_file['device'] == 'gpu' else 'cpu'
         checkpoint = dict()
         if configurator.dl_config['experiment']['weights'] is not None:
-            checkpoint = torch.load(configurator.dl_config['experiment']['weights'], map_location=torch.device(device))
+            checkpoint = torch.load(configurator.dl_config['experiment']['weights'], map_location=torch.device(
+                device))
 
         if configurator.dl_config['experiment']['task'] == 'train':
             configurator.start_training(checkpoint)

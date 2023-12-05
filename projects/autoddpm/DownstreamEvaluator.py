@@ -188,7 +188,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
         logging.info("################ MANIFOLD LEARNING TEST #################")
         lpips_alex = lpips.LPIPS(net='alex')
 
-        self.model.load_state_dict(global_model)
+        self.model.load_state_dict(global_model, strict=False)
         self.model.eval()
         metrics = {
             'MAE': [],
