@@ -24,6 +24,11 @@ from net_utils.diffusion_unet import DiffusionModelUNet
 from net_utils.schedulers.ddpm import DDPMScheduler
 from net_utils.schedulers.ddim import DDIMScheduler
 
+from skimage import exposure
+from scipy.ndimage.filters import gaussian_filter
+import lpips
+
+
 from tqdm import tqdm
 has_tqdm = True
 
@@ -37,6 +42,7 @@ class DDPM(nn.Module):
                  attention_levels=(False, True, True),
                  num_res_blocks=1,
                  num_head_channels=256,
+                 method="autoDDPM",
                  train_scheduler="ddpm",
                  inference_scheduler="ddpm",
                  inference_steps=1000,
@@ -59,6 +65,7 @@ class DDPM(nn.Module):
             num_res_blocks=num_res_blocks,
             num_head_channels=num_head_channels,
         )
+        self.method = method
         self.noise_level_recon = noise_level_recon
         self.noise_level_inpaint = noise_level_inpaint
         self.prediction_type = prediction_type
@@ -83,6 +90,10 @@ class DDPM(nn.Module):
                 num_train_timesteps=1000, noise_type=noise_type, prediction_type=prediction_type)
 
         self.inference_scheduler.set_timesteps(inference_steps)
+        self.device = 'cuda' if config_file['device'] == 'gpu' else 'cpu'
+
+        self.l_pips_sq = lpips.LPIPS(pretrained=True, net='squeeze', use_dropout=True, eval_mode=True,
+                                     spatial=True, lpips=True).to(self.device)
 
     def forward(self, inputs, noise=None, timesteps=None, condition=None):
         # only for torch_summary to work
@@ -95,6 +106,168 @@ class DDPM(nn.Module):
         noisy_image = self.train_scheduler.add_noise(
             original_samples=inputs, noise=noise, timesteps=timesteps)
         return self.unet(x=noisy_image, timesteps=timesteps, context=condition)
+
+    def dilate_masks(self, masks):
+        """
+        :param masks: masks to dilate
+        :return: dilated masks
+        """
+        kernel = np.ones((3, 3), np.uint8)
+
+        dilated_masks = torch.zeros_like(masks)
+        for i in range(masks.shape[0]):
+            mask = masks[i][0].detach().cpu().numpy()
+            if np.sum(mask) < 1:
+                dilated_masks[i] = masks[i]
+                continue
+            dilated_mask = cv2.dilate(mask, kernel, iterations=1)
+            dilated_mask = torch.from_numpy(dilated_mask).to(masks.device).unsqueeze(dim=0)
+            dilated_masks[i] = dilated_mask
+
+        return dilated_masks
+
+    def compute_residual(self, x_rec, x, hist_eq=False):
+        """
+        :param x_rec: reconstructed image
+        :param x: original image
+        :param hist_eq: whether to perform histogram equalization
+        :return: residual image
+        """
+        if hist_eq:
+            x_rescale = exposure.equalize_adapthist(x.cpu().detach().numpy())
+            x_rec_rescale = exposure.equalize_adapthist(x_rec.cpu().detach().numpy())
+            x_res = np.abs(x_rec_rescale - x_rescale)
+        else:
+            x_res = np.abs(x_rec.cpu().detach().numpy() - x.cpu().detach().numpy())
+
+        return x_res
+
+    def lpips_loss(self, anomaly_img, ph_img, retPerLayer=False):
+        """
+        :param anomaly_img: anomaly image
+        :param ph_img: pseudo-healthy image
+        :param retPerLayer: whether to return the loss per layer
+        :return: LPIPS loss
+        """
+        if len(ph_img.shape) == 2:
+            ph_img = torch.unsqueeze(torch.unsqueeze(ph_img, 0), 0)
+            anomaly_img = torch.unsqueeze(torch.unsqueeze(anomaly_img, 0), 0)
+
+        loss_lpips = self.l_pips_sq(anomaly_img, ph_img, normalize=True, retPerLayer=retPerLayer)
+        if retPerLayer:
+            loss_lpips = loss_lpips[1][0]
+        return loss_lpips.cpu().detach().numpy()
+
+    @torch.no_grad()
+    def get_anomaly(self, inputs: torch.Tensor,
+                    noise_level: int | None = 500,
+                    intermediate_steps: int | None = 100,
+                    conditioning: torch.Tensor | None = None,
+                    save_intermediates: bool | None = False,
+                    verbose: bool = False,
+                    method: str = 'autoDDPM'):
+        assert method == 'anoDDPM' or method =='autoDDPM', 'Method should be either anoDDPM or autoDDPM'
+        if method == 'anoDDPM':
+            x_rec, _ = self.model.sample_from_image(inputs, noise_level=noise_level, verbose=verbose)
+            x_rec = torch.clamp(x_rec, 0, 1)
+            anomaly_maps = np.abs(inputs.cpu().detach().numpy - x_rec.cpu().detach().numpy)
+            anomaly_scores = np.mean(anomaly_maps, axis=(1, 2, 3), keepdims=True)
+            x_rec_dict = {'x_rec': x_rec}
+        else:
+            anomaly_maps, anomaly_scores, x_rec_dict = self.get_autoDDPM_anomaly(inputs=inputs,
+                                                                                  noise_level_coarse=noise_level,
+                                                                                  noise_level_fine=self.noise_level_inpaint,
+                                                                                  save_intermediates=save_intermediates,
+                                                                                  verbose=verbose)
+        return anomaly_maps, anomaly_scores, x_rec_dict
+
+    @torch.no_grad()
+    def get_autoDDPM_anomaly(self, inputs: torch.Tensor,
+                             noise_level_recon: int | None = 200,
+                             noise_level_inpaint: int | None = 50,
+                             save_intermediates: bool | None = False,
+                             verbose: bool = False):
+
+        x_rec, _ = self.model.sample_from_image(inputs, noise_level=noise_level_recon,
+                                                save_intermediates=save_intermediates, verbose=verbose)
+        x_rec = torch.clamp(x_rec, 0, 1)
+        x_res = self.compute_residual(x, x_rec, hist_eq=False)
+        lpips_mask = self.lpips_loss(x, x_rec, retPerLayer=False)
+        #
+        # anomalous: high value, healthy: low value
+        x_res = np.asarray([(x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0])]).clip(0, 1)
+        combined_mask_np = lpips_mask * x_res
+        combined_mask = torch.Tensor(combined_mask_np).to(self.device)
+        combined_mask_binary = torch.where(combined_mask > th, torch.ones_like(combined_mask),
+                                           torch.zeros_like(combined_mask))
+        combined_mask_binary_dilated = self.dilate_masks(combined_mask_binary)
+        mask_in_use = combined_mask_binary_dilated
+
+        # In-painting setup
+        # 1. Mask the original image (get rid of anomalies) and the reconstructed image (keep pseudo-healthy
+        # counterparts)
+        x_masked = (1 - mask_in_use) * x
+        x_rec_masked = mask_in_use * x_rec
+        #
+        #
+        # 2. Start in-painting with reconstructed image and not pure noise
+        noise = torch.randn_like(x_rec, device=self.device)
+        timesteps = torch.full([x.shape[0]], noise_level_inpaint, device=self.device).long()
+        inpaint_image = self.inference_scheduler.add_noise(
+            original_samples=x_rec, noise=noise, timesteps=timesteps
+        )
+
+        # 3. Setup for loop
+        timesteps = self.inference_scheduler.get_timesteps(noise_level_inpaint)
+        progress_bar = iter(timesteps)
+        num_resample_steps = self.resample_steps
+        stitched_images = []
+
+        # 4. Inpainting loop
+        with torch.no_grad():
+            with autocast(enabled=True):
+                for t in progress_bar:
+                    for u in range(num_resample_steps):
+                        # 4a) Get the known portion at t-1
+                        if t > 0:
+                            noise = torch.randn_like(x, device=self.device)
+                            timesteps_prev = torch.full([x.shape[0]], t - 1, device=self.device).long()
+                            noised_masked_original_context = self.inference_scheduler.add_noise(
+                                original_samples=x_masked, noise=noise, timesteps=timesteps_prev
+                            )
+                        else:
+                            noised_masked_original_context = x_masked
+                        #
+                        # 4b) Perform a denoising step to get the unknown portion at t-1
+                        if t > 0:
+                            timesteps = torch.full([x.shape[0]], t, device=self.device).long()
+                            model_output = self.unet(x=inpaint_image, timesteps=timesteps)
+                            inpainted_from_x_rec, _ = self.inference_scheduler.step(model_output, t,
+                                                                                          inpaint_image)
+                        #
+                        # 4c) Combine the known and unknown portions at t-1
+                        inpaint_image = torch.where(
+                            mask_in_use == 1, inpainted_from_x_rec, noised_masked_original_context
+                        )
+
+                        ## 4d) Perform resampling: sample x_t from x_t-1 -> get new image to be inpainted
+                        # in the masked region
+                        if t > 0 and u < (num_resample_steps - 1):
+                            inpaint_image = (
+                                    torch.sqrt(1 - self.inference_scheduler.betas[t - 1]) * inpaint_image
+                                    + torch.sqrt(self.inference_scheduler.betas[t - 1])
+                                    * torch.randn_like(x, device=self.device)
+                            )
+
+        final_inpainted_image = inpaint_image
+        x_res_2 = self.compute_residual(x, final_inpainted_image.clamp(0, 1), hist_eq=False)
+        x_lpips_2 = self.lpips_loss(x, final_inpainted_image, retPerLayer=False)
+        anomaly_maps = x_res_2 * combined_mask.cpu().detach().numpy()
+        anomaly_scores = np.mean(anomaly_maps, axis=(1, 2, 3), keepdims=True)
+
+        return anomaly_maps, anomaly_scores, {'x_rec_orig': x_rec, 'x_res_orig': combined_mask,
+                                              'mask': mask_in_use, 'stitch': x_masked + x_rec_masked,
+                                              'x_rec': final_inpainted_image}
 
     @torch.no_grad()
     def sample(
