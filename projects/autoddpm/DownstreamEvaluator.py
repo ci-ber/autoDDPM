@@ -229,6 +229,8 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 masks = data[1].to(self.device)
                 masks[masks>0] = 1
                 to_visualize.append({'title': 'x', 'tensor': x*255, 'cmap': 'gray', 'vmax': 1})
+                to_visualize.append({'title': 'x', 'tensor': x*255, 'cmap': 'gray', 'vmax': 1})
+
 
         #         x_rec = torch.zeros_like(x)
         #         if not os.path.exists(os.path.join(os.path.dirname(self.model.image_path), f'rec_{self.model.noise_level_recon}', f'image_{global_counter}.png')):
