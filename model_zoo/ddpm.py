@@ -166,6 +166,7 @@ class DDPM(nn.Module):
             if retPerLayer:
                 lpips = lpips[1][0]
             saliency_maps.append(lpips[0].cpu().detach().numpy)
+        print(f'Shape sal: {np.asarray(saliency_maps).shape}')
         return np.asarray(saliency_maps)
 
     @torch.no_grad()
