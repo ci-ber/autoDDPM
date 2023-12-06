@@ -77,14 +77,14 @@ cd autoDDPM
 ```
 
 #### 3). Install requirements
+*Optional* create virtual env:
+```bash
+conda create --name autoddpm python=3.8.0
+conda activate autoddpm
+```
 
 ```bash
 pip install -r pip_requirements.txt
-```
-or *conda*: 
-```bash
-conda create --name autoddpm_py308 --file conda_requirements.txt
-conda activate autoddpm_py308
 ```
 
 #### 4). Install PyTorch 
