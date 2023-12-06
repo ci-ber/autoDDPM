@@ -250,7 +250,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                     to_visualize.append({'title': f'Stitched', 'tensor': x_rec_dict['stitch'], })
                     to_visualize.append({'title': 'Final inpainted image', 'tensor': x_rec_dict['x_rec']})
                     to_visualize.append({'title': f'Final Anomaly Map {anomaly_maps.max():.3f}', 'tensor':
-                        combined_mask_np*x_lpips_2*x_res_2, 'cmap': 'plasma', 'vmax': .07})
+                        anomaly_maps, 'cmap': 'plasma', 'vmax': .07})
 
                 to_visualize.append({'title': 'GT', 'tensor': masks})
 
