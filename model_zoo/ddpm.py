@@ -98,13 +98,9 @@ class AnomalyMap():
         for batch_id in range(anomaly_img.size(0)):
             lpips = self.l_pips_sq(anomaly_img[batch_id:batch_id + 1, :, :, :], ph_img[batch_id:batch_id + 1, :, :, :],
                                    normalize=True, retPerLayer=retPerLayer)
-            print(lpips.shape)
             if retPerLayer:
                 lpips = lpips[1][0]
-            print(lpips[0].shape)
-
             saliency_maps.append(lpips[0,:,:,:].cpu().detach().numpy())
-        print(f'Shape sal: {np.asarray(saliency_maps).shape}')
         return np.asarray(saliency_maps)
 
 
@@ -221,7 +217,7 @@ class DDPM(nn.Module):
         x_res = np.asarray([(x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0])]).clip(0, 1)
         combined_mask_np = lpips_mask * x_res
         combined_mask = torch.Tensor(combined_mask_np).to(self.device)
-        combined_mask_binary = torch.where(combined_mask > th, torch.ones_like(combined_mask),
+        combined_mask_binary = torch.where(combined_mask > self.masking_threshold, torch.ones_like(combined_mask),
                                            torch.zeros_like(combined_mask))
         combined_mask_binary_dilated = self.ano_map.dilate_masks(combined_mask_binary)
         mask_in_use = combined_mask_binary_dilated
