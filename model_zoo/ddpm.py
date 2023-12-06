@@ -219,7 +219,8 @@ class DDPM(nn.Module):
         combined_mask_np = lpips_mask * x_res
         combined_mask = torch.Tensor(combined_mask_np).to(self.device)
         masking_threshold = self.masking_threshold if self.masking_threshold >=0 else torch.tensor(np.asarray([(
-            np.percentile(combined_mask[i], 95)) for i in range(combined_mask.shape[0])]).clip(0, 1))
+            np.percentile(combined_mask[i].cpu().detach().numpy(), 95)) for i in range(combined_mask.shape[0])]).clip(0,
+                                                                                                                   1))
         combined_mask_binary = torch.where(combined_mask > masking_threshold, torch.ones_like(combined_mask),
                                            torch.zeros_like(combined_mask))
         combined_mask_binary_dilated = self.ano_map.dilate_masks(combined_mask_binary)
