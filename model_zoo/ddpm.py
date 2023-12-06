@@ -251,7 +251,7 @@ class DDPM(nn.Module):
                         # 4a) Get the known portion at t-1
                         if t > 0:
                             noise = torch.randn_like(inputs, device=self.device)
-                            timesteps_prev = torch.full([x.shape[0]], t - 1, device=self.device).long()
+                            timesteps_prev = torch.full([inputs.shape[0]], t - 1, device=self.device).long()
                             noised_masked_original_context = self.inference_scheduler.add_noise(
                                 original_samples=x_masked, noise=noise, timesteps=timesteps_prev
                             )
