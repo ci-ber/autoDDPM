@@ -8,8 +8,8 @@ checkpoint_path: &checkpoint_path './projects/anoddpm/weights/runs/'
 #
 experiment:
   name: DDPM
-  task: train
-  weights: # ./projects/anoddpm/weights/pretrained/Pretrainer_3000ep_128x/best_model.pt
+  task: test
+  weights: ./weights/anoddpm/Pretrainer_3000ep_128x/best_model.pt
 
 device: gpu
 configurator:
@@ -43,6 +43,7 @@ model:
     inference_steps: 1000
     noise_level_recon: 200
     noise_type: "gaussian"
+    method: "anoDDPM"
     prediction_type: "epsilon"
 
     # Thresholds on stroke data: 71, 570
@@ -56,13 +57,13 @@ model:
 # Trainer
 #
 trainer:
-  module_name: projects.anoddpm.Trainer
+  module_name: projects.autoddpm.Trainer
   class_name: PTrainer
   params:
     input_size: *target_size
     checkpoint_path: *checkpoint_path
     batch_size: *tbatch_size
-    nr_epochs: 999
+    nr_epochs: 3000
     val_interval: 50
     # Loss
     loss:
@@ -94,7 +95,7 @@ trainer:
 # Downstream tasks
 downstream_tasks:  
   detection:
-   module_name: projects.anoddpm.DownstreamEvaluator
+   module_name: projects.autoddpm.DownstreamEvaluator
    class_name: PDownstreamEvaluator
    checkpoint_path: *checkpoint_path
    global_detection: True

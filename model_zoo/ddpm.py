@@ -123,7 +123,7 @@ class DDPM(nn.Module):
                  noise_type="gaussian",
                  prediction_type="epsilon",
                  resample_steps=4,
-                 masking_threshold=0.1,
+                 masking_threshold=-1,
                  threshold_low=1,
                  threshold_high=10000,
                  image_path="",):
@@ -218,7 +218,9 @@ class DDPM(nn.Module):
         x_res = np.asarray([(x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0])]).clip(0, 1)
         combined_mask_np = lpips_mask * x_res
         combined_mask = torch.Tensor(combined_mask_np).to(self.device)
-        combined_mask_binary = torch.where(combined_mask > self.masking_threshold, torch.ones_like(combined_mask),
+        masking_threshold = self.masking_threshold if self.masking_threshold >=0 else np.asarray([(np.percentile(
+            combined_mask[i], 95)) for i in range(combined_mask.shape[0])]).clip(0, 1)
+        combined_mask_binary = torch.where(combined_mask > masking_threshold, torch.ones_like(combined_mask),
                                            torch.zeros_like(combined_mask))
         combined_mask_binary_dilated = self.ano_map.dilate_masks(combined_mask_binary)
         mask_in_use = combined_mask_binary_dilated

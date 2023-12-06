@@ -44,10 +44,11 @@ model:
     inference_steps: 1000
     noise_level_recon: 200
     noise_level_inpaint: 50
+    method: "autoDDPM"
     noise_type: "gaussian"
     prediction_type: "epsilon"
     resample_steps: 5
-    masking_threshold: 0.13
+    masking_threshold: 0.13 # COMMENT OUT IF UNKNOWN, SHOULD BE SET ON THE VALIDATION OF EVERY DATASET INDIVIDUALLY
 
     # Thresholds on stroke data: 71, 570
     threshold_low: 1
