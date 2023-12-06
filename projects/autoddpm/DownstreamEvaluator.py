@@ -237,7 +237,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 to_visualize = [
                     {'title': 'Input', 'tensor': x, 'cmap': 'gray', 'vmax': 1},
                     {'title': 'Rec.', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1},
-                    {'title': f'Anomaly Map {x.max():.3f}', 'tensor': anomaly_maps, 'cmap': 'plasma', 'vmax': .3}]
+                    {'title': f'Anomaly Map {x.max():.3f}', 'tensor': anomaly_maps, 'cmap': 'plasma', 'vmax': .5}]
 
                 if self.model.method == 'autoDDPM':
                     to_visualize = [
@@ -250,7 +250,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                     to_visualize.append({'title': f'Stitched', 'tensor': x_rec_dict['stitch'], })
                     to_visualize.append({'title': 'Final inpainted image', 'tensor': x_rec_dict['x_rec']})
                     to_visualize.append({'title': f'Final Anomaly Map {anomaly_maps.max():.3f}', 'tensor':
-                        anomaly_maps, 'cmap': 'plasma', 'vmax': .07})
+                        anomaly_maps, 'cmap': 'plasma', 'vmax': .4})
 
                 to_visualize.append({'title': 'GT', 'tensor': masks})
 
