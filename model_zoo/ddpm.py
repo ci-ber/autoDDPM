@@ -224,6 +224,7 @@ class DDPM(nn.Module):
         print(masking_threshold.shape)
         combined_mask_binary = torch.cat([torch.where(combined_mask[i] > masking_threshold[i], torch.ones_like(
             combined_mask[i]), torch.zeros_like(combined_mask[i])) for i in range(combined_mask.shape[0])], dim=0)
+        print(combined_mask_binary.shape)
 
         combined_mask_binary_dilated = self.ano_map.dilate_masks(combined_mask_binary)
         mask_in_use = combined_mask_binary_dilated
