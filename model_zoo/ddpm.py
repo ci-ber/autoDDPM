@@ -101,6 +101,8 @@ class AnomalyMap():
             print(lpips.shape)
             if retPerLayer:
                 lpips = lpips[1][0]
+            print(lpips.shape)
+
             saliency_maps.append(lpips[0].cpu().detach().numpy)
         print(f'Shape sal: {np.asarray(saliency_maps).shape}')
         return np.asarray(saliency_maps)
