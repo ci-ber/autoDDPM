@@ -239,7 +239,7 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                     {'title': 'Rec.', 'tensor': x_rec,'cmap': 'gray', 'vmax': 1},
                     {'title': f'Anomaly Map {x.max():.3f}', 'tensor': anomaly_maps, 'cmap': 'plasma', 'vmax': .3}]
 
-                if method == 'autoDDPM':
+                if self.model.method == 'autoDDPM':
                     to_visualize = [
                         {'title': 'Input', 'tensor': x, 'cmap': 'gray', 'vmax': 1},
                         {'title': 'Coarse Rec.', 'tensor': x_rec_dict['x_rec_orig'], 'cmap': 'gray', 'vmax': 1},
