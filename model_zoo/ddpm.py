@@ -33,6 +33,78 @@ from tqdm import tqdm
 has_tqdm = True
 
 
+class AnomalyMap():
+    def __init__(self):
+
+        self.device = torch.device('cuda:' + str(0) if torch.cuda.is_available() else 'cpu')
+
+        self.l_pips_sq = lpips.LPIPS(pretrained=True, net='squeeze', use_dropout=True, eval_mode=True,
+                                     spatial=True, lpips=True).to(self.device)
+        super(AnomalyMap, self).__init__()
+
+    def dilate_masks(self, masks):
+        """
+        :param masks: masks to dilate
+        :return: dilated masks
+        """
+        kernel = np.ones((3, 3), np.uint8)
+
+        dilated_masks = torch.zeros_like(masks)
+        for i in range(masks.shape[0]):
+            mask = masks[i][0].detach().cpu().numpy()
+            if np.sum(mask) < 1:
+                dilated_masks[i] = masks[i]
+                continue
+            dilated_mask = cv2.dilate(mask, kernel, iterations=1)
+            dilated_mask = torch.from_numpy(dilated_mask).to(masks.device).unsqueeze(dim=0)
+            dilated_masks[i] = dilated_mask
+
+        return dilated_masks
+
+    def compute_residual(self, x_rec, x, hist_eq=False):
+        """
+        :param x_rec: reconstructed image
+        :param x: original image
+        :param hist_eq: whether to perform histogram equalization
+        :return: residual image
+        """
+        if hist_eq:
+            x_rescale = exposure.equalize_adapthist(x.cpu().detach().numpy())
+            x_rec_rescale = exposure.equalize_adapthist(x_rec.cpu().detach().numpy())
+            x_res = np.abs(x_rec_rescale - x_rescale)
+        else:
+            x_res = np.abs(x_rec.cpu().detach().numpy() - x.cpu().detach().numpy())
+
+        return x_res
+
+    def lpips_loss(self, anomaly_img, ph_img, retPerLayer=False):
+        """
+        :param anomaly_img: anomaly image
+        :param ph_img: pseudo-healthy image
+        :param retPerLayer: whether to return the loss per layer
+        :return: LPIPS loss
+        """
+        if len(ph_img.shape) < 2:
+            print('Image should have 2 dimensions at lease (LPIPS)')
+            return
+        if len(ph_img.shape) == 2:
+            ph_img = torch.unsqueeze(torch.unsqueeze(ph_img, 0), 0)
+            anomaly_img = torch.unsqueeze(torch.unsqueeze(anomaly_img, 0), 0)
+        if len(ph_img.shape) == 3:
+            ph_img = torch.unsqueeze(ph_img, 0)
+            anomaly_img = torch.unsqueeze(anomaly_img, 0)
+
+        saliency_maps = []
+        for batch_id in range(anomaly_img.size(0)):
+            lpips = self.l_pips_sq(anomaly_img[batch_id:batch_id + 1, :, :, :], ph_img[batch_id:batch_id + 1, :, :, :],
+                                   normalize=True, retPerLayer=retPerLayer)
+            print(lpips.shape)
+            if retPerLayer:
+                lpips = lpips[1][0]
+            saliency_maps.append(lpips[0].cpu().detach().numpy)
+        print(f'Shape sal: {np.asarray(saliency_maps).shape}')
+        return np.asarray(saliency_maps)
+
 class DDPM(nn.Module):
 
     def __init__(self, spatial_dims=2,
@@ -92,8 +164,7 @@ class DDPM(nn.Module):
         self.inference_scheduler.set_timesteps(inference_steps)
         self.device = torch.device('cuda:' + str(0) if torch.cuda.is_available() else 'cpu')
 
-        self.l_pips_sq = lpips.LPIPS(pretrained=True, net='squeeze', use_dropout=True, eval_mode=True,
-                                     spatial=True, lpips=True).to(self.device)
+        self.ano_map = AnomalyMap()
 
     def forward(self, inputs, noise=None, timesteps=None, condition=None):
         # only for torch_summary to work
@@ -106,68 +177,6 @@ class DDPM(nn.Module):
         noisy_image = self.train_scheduler.add_noise(
             original_samples=inputs, noise=noise, timesteps=timesteps)
         return self.unet(x=noisy_image, timesteps=timesteps, context=condition)
-
-    def dilate_masks(self, masks):
-        """
-        :param masks: masks to dilate
-        :return: dilated masks
-        """
-        kernel = np.ones((3, 3), np.uint8)
-
-        dilated_masks = torch.zeros_like(masks)
-        for i in range(masks.shape[0]):
-            mask = masks[i][0].detach().cpu().numpy()
-            if np.sum(mask) < 1:
-                dilated_masks[i] = masks[i]
-                continue
-            dilated_mask = cv2.dilate(mask, kernel, iterations=1)
-            dilated_mask = torch.from_numpy(dilated_mask).to(masks.device).unsqueeze(dim=0)
-            dilated_masks[i] = dilated_mask
-
-        return dilated_masks
-
-    def compute_residual(self, x_rec, x, hist_eq=False):
-        """
-        :param x_rec: reconstructed image
-        :param x: original image
-        :param hist_eq: whether to perform histogram equalization
-        :return: residual image
-        """
-        if hist_eq:
-            x_rescale = exposure.equalize_adapthist(x.cpu().detach().numpy())
-            x_rec_rescale = exposure.equalize_adapthist(x_rec.cpu().detach().numpy())
-            x_res = np.abs(x_rec_rescale - x_rescale)
-        else:
-            x_res = np.abs(x_rec.cpu().detach().numpy() - x.cpu().detach().numpy())
-
-        return x_res
-
-    def lpips_loss(self, anomaly_img, ph_img, retPerLayer=False):
-        """
-        :param anomaly_img: anomaly image
-        :param ph_img: pseudo-healthy image
-        :param retPerLayer: whether to return the loss per layer
-        :return: LPIPS loss
-        """
-        if len(ph_img.shape) < 2:
-            print('Image should have 2 dimensions at lease (LPIPS)')
-            return
-        if len(ph_img.shape) == 2:
-            ph_img = torch.unsqueeze(torch.unsqueeze(ph_img, 0), 0)
-            anomaly_img = torch.unsqueeze(torch.unsqueeze(anomaly_img, 0), 0)
-        if len(ph_img.shape) == 3:
-            ph_img = torch.unsqueeze(ph_img, 0)
-            anomaly_img = torch.unsqueeze(anomaly_img, 0)
-
-        saliency_maps = []
-        for batch_id in range(anomaly_img.size(0)):
-            lpips = self.l_pips_sq(anomaly_img[batch_id:batch_id+1,:,:,:], ph_img[batch_id:batch_id+1,:,:,:],
-                                   normalize=True, retPerLayer=retPerLayer)
-            if retPerLayer:
-                lpips = lpips[1][0]
-            saliency_maps.append(lpips[0].cpu().detach().numpy)
-        print(f'Shape sal: {np.asarray(saliency_maps).shape}')
-        return np.asarray(saliency_maps)
 
     @torch.no_grad()
     def get_anomaly(self, inputs: torch.Tensor,
@@ -202,8 +211,8 @@ class DDPM(nn.Module):
         x_rec, _ = self.sample_from_image(inputs, noise_level=noise_level_recon,
                                                 save_intermediates=save_intermediates, verbose=verbose)
         x_rec = torch.clamp(x_rec, 0, 1)
-        x_res = self.compute_residual(inputs, x_rec, hist_eq=False)
-        lpips_mask = self.lpips_loss(inputs, x_rec, retPerLayer=False)
+        x_res = self.ano_map.compute_residual(inputs, x_rec, hist_eq=False)
+        lpips_mask = self.ano_map.lpips_loss(inputs, x_rec, retPerLayer=False)
         #
         # anomalous: high value, healthy: low value
         x_res = np.asarray([(x_res[i] / np.percentile(x_res[i], 95)) for i in range(x_res.shape[0])]).clip(0, 1)
@@ -211,7 +220,7 @@ class DDPM(nn.Module):
         combined_mask = torch.Tensor(combined_mask_np).to(self.device)
         combined_mask_binary = torch.where(combined_mask > th, torch.ones_like(combined_mask),
                                            torch.zeros_like(combined_mask))
-        combined_mask_binary_dilated = self.dilate_masks(combined_mask_binary)
+        combined_mask_binary_dilated = self.ano_map.dilate_masks(combined_mask_binary)
         mask_in_use = combined_mask_binary_dilated
 
         # In-painting setup
@@ -271,8 +280,8 @@ class DDPM(nn.Module):
                             )
 
         final_inpainted_image = inpaint_image
-        x_res_2 = self.compute_residual(inputs, final_inpainted_image.clamp(0, 1), hist_eq=False)
-        x_lpips_2 = self.lpips_loss(inputs, final_inpainted_image, retPerLayer=False)
+        x_res_2 = self.ano_map.compute_residual(inputs, final_inpainted_image.clamp(0, 1), hist_eq=False)
+        x_lpips_2 = self.ano_map.lpips_loss(inputs, final_inpainted_image, retPerLayer=False)
         anomaly_maps = x_res_2 * combined_mask.cpu().detach().numpy()
         anomaly_scores = np.mean(anomaly_maps, axis=(1, 2, 3), keepdims=True)
 
