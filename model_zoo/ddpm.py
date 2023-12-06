@@ -190,7 +190,7 @@ class DDPM(nn.Module):
         if method == 'anoDDPM':
             x_rec, _ = self.sample_from_image(inputs, noise_level=noise_level, verbose=verbose)
             x_rec = torch.clamp(x_rec, 0, 1)
-            anomaly_maps = np.abs(inputs.cpu().detach().numpy - x_rec.cpu().detach().numpy)
+            anomaly_maps = np.abs(inputs.cpu().detach().numpy() - x_rec.cpu().detach().numpy())
             anomaly_scores = np.mean(anomaly_maps, axis=(1, 2, 3), keepdims=True)
             x_rec_dict = {'x_rec': x_rec}
         else:
