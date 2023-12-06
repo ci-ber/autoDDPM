@@ -19,6 +19,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.cuda.amp import autocast
 
 from net_utils.diffusion_unet import DiffusionModelUNet
 from net_utils.schedulers.ddpm import DDPMScheduler

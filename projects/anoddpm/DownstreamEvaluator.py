@@ -19,7 +19,6 @@ from scipy.ndimage.filters import gaussian_filter
 from torchvision.utils import save_image
 
 from PIL import Image
-import cv2
 #
 import lpips
 #
