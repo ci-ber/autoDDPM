@@ -27,7 +27,7 @@ from net_utils.schedulers.ddim import DDIMScheduler
 from skimage import exposure
 from scipy.ndimage.filters import gaussian_filter
 import lpips
-
+import cv2
 
 from tqdm import tqdm
 has_tqdm = True
