@@ -225,7 +225,6 @@ class PDownstreamEvaluator(DownstreamEvaluator):
                 else:
                     data0 = data[0]
                 x = data0.to(self.device)
-                print(f'min: {torch.min(x)}, max: {torch.max(x)} mean: {torch.mean(x)}')
                 masks = data[1].to(self.device)
                 masks[masks>0] = 1
 
