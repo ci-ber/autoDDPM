@@ -48,7 +48,7 @@ model:
     noise_type: "gaussian"
     prediction_type: "epsilon"
     resample_steps: 5
-    masking_threshold: -1 #0.13 # COMMENT OUT IF UNKNOWN, SHOULD BE SET ON THE VALIDATION OF EVERY DATASET INDIVIDUALLY
+    masking_threshold: 0.13 # COMMENT OUT OR SET TO -1 IF UNKNOWN, SHOULD BE SET ON THE VALIDATION OF EVERY DATASET INDIVIDUALLY
 
     # Thresholds on stroke data: 71, 570
     threshold_low: 1
