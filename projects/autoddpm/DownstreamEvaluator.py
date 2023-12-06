@@ -59,6 +59,61 @@ class PDownstreamEvaluator(DownstreamEvaluator):
         """
         self.pathology_localization(global_model, self.model.masking_threshold)
 
+    def thresholding(self, global_model):
+        """
+        Validation of downstream tasks -- finds suitable threshold at desired False Positive Rate (FPR) on HEALTHY
+        subset [here for FPRs at 1, 2, and 5%]
+
+        :param global_model:
+            Global parameters
+                """
+        logging.info("################ Threshold Search #################")
+        self.model.load_state_dict(global_model)
+        self.model.eval()
+        ths = np.linspace(0, 1, endpoint=False, num=1000)
+        fprs = dict()
+        for th_ in ths:
+            fprs[th_] = []
+        for dataset_key in self.test_data_dict.keys():
+            dataset = self.test_data_dict[dataset_key]
+            logging.info('DATASET: {}'.format(dataset_key))
+            for idx, data in enumerate(dataset):
+                if type(data) is dict and 'images' in data.keys():
+                    data0 = data['images']
+                else:
+                    data0 = data[0]
+                x = data0.to(self.device)
+                im_scale = x.shape[-1] * x.shape[-2]
+                anomaly_maps, anmaly_scores, x_rec_dict = self.model.get_anomaly(x)
+                for i in range(len(x)):
+                    x_res_i = anomaly_maps[i][0]
+                    for th_ in ths:
+                        fpr = (np.count_nonzero(x_res_i > th_) * 100) / im_scale
+                        fprs[th_].append(fpr)
+        mean_fprs = []
+        for th_ in ths:
+            mean_fprs.append(np.mean(fprs[th_]))
+        mean_fprs = np.asarray(mean_fprs)
+        sorted_idxs = np.argsort(mean_fprs)
+        th_1, th_2, best_th = 0, 0, 0
+        fpr_1, fpr_2, best_fpr = 0, 0, 0
+        for sort_idx in sorted_idxs:
+            th_ = ths[sort_idx]
+            fpr_ = mean_fprs[sort_idx]
+            if fpr_ <= 1:
+                th_1 = th_
+                fpr_1 = fpr_
+            if fpr_ <= 2:
+                th_2 = th_
+                fpr_2 = fpr_
+            if fpr_ <= 5:
+                best_th = th_
+                best_fpr = fpr_
+            else:
+                break
+        print(f'Th_1: [{th_1}]: {fpr_1} || Th_2: [{th_2}]: {fpr_2} || Th_5: [{best_th}]: {best_fpr}')
+        return best_th
+
     def _log_visualization(self, to_visualize, i, count):
         """
         Helper function to log images and masks to wandb
