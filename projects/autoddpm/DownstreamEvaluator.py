@@ -83,57 +83,6 @@ class PDownstreamEvaluator(DownstreamEvaluator):
 
         wandb.log({f'Anomaly_masks/Example_Atlas_{count}': [wandb.Image(diffp, caption="Atlas_" + str(count))]})
 
-    def dilate_masks(self, masks):
-        """
-        :param masks: masks to dilate
-        :return: dilated masks
-        """
-        kernel = np.ones((3, 3), np.uint8)
-
-        dilated_masks = torch.zeros_like(masks)
-        for i in range(masks.shape[0]):
-            mask = masks[i][0].detach().cpu().numpy()
-            if np.sum(mask) < 1:
-                dilated_masks[i] = masks[i]
-                continue
-            dilated_mask = cv2.dilate(mask, kernel, iterations=1)
-            dilated_mask = torch.from_numpy(dilated_mask).to(masks.device).unsqueeze(dim=0)
-            dilated_masks[i] = dilated_mask
-
-        return dilated_masks
-
-    def compute_residual(self, x_rec, x, hist_eq=False):
-        """
-        :param x_rec: reconstructed image
-        :param x: original image
-        :param hist_eq: whether to perform histogram equalization
-        :return: residual image
-        """
-        if hist_eq:
-            x_rescale = exposure.equalize_adapthist(x.cpu().detach().numpy())
-            x_rec_rescale = exposure.equalize_adapthist(x_rec.cpu().detach().numpy())
-            x_res = np.abs(x_rec_rescale - x_rescale)
-        else:
-            x_res = np.abs(x_rec.cpu().detach().numpy() - x.cpu().detach().numpy())
-
-        return x_res
-
-    def lpips_loss(self, anomaly_img, ph_img, retPerLayer=False):
-        """
-        :param anomaly_img: anomaly image
-        :param ph_img: pseudo-healthy image
-        :param retPerLayer: whether to return the loss per layer
-        :return: LPIPS loss
-        """
-        if len(ph_img.shape) == 2:
-            ph_img = torch.unsqueeze(torch.unsqueeze(ph_img, 0), 0)
-            anomaly_img = torch.unsqueeze(torch.unsqueeze(anomaly_img, 0), 0)
-
-        loss_lpips = self.l_pips_sq(anomaly_img, ph_img, normalize=True, retPerLayer=retPerLayer)
-        if retPerLayer:
-            loss_lpips = loss_lpips[1][0]
-        return loss_lpips.cpu().detach().numpy()
-
     def find_mask_size_thresholds(self, dataset):
         """
         :param dataset: dataset to find mask size thresholds
