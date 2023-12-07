@@ -97,7 +97,7 @@ class AnomalyMap():
 
         saliency_maps = []
         for batch_id in range(anomaly_img.size(0)):
-            lpips = self.l_pips_sq(anomaly_img[batch_id:batch_id + 1, :, :, :], ph_img[batch_id:batch_id + 1, :, :, :],
+            lpips = self.l_pips_sq(2*anomaly_img[batch_id:batch_id + 1, :, :, :]-1, 2*ph_img[batch_id:batch_id + 1, :, :, :]-1,
                                    normalize=True, retPerLayer=retPerLayer)
             if retPerLayer:
                 lpips = lpips[1][0]
